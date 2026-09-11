@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0C1119">
+<title>Pladelog</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230C1119'/%3E%3Crect x='5' y='12' width='22' height='9' rx='2' fill='%23F7F9FC'/%3E%3Crect x='5' y='12' width='6' height='9' rx='2' fill='%231B3A8B'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+    --ink:#0C1119;
+    --surface:#151C28;
+    --surface2:#1E2735;
+    --line:#2A3547;
+    --text:#EEF2F8;
+    --text-dim:#94A0B4;
+    --amber:#F7B32B;
+    --amber-dim:#5A4A22;
+    --green:#35D07F;
+    --red:#FF5C5C;
+    --plate-white:#F7F9FC;
+    --plate-blue:#1B3A8B;
+    --plate-ink:#14181F;
+    --font-body:'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ margin:0; background:var(--ink); height:100%; }
+  body{
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+  }
+  button, input, textarea{ font-family:inherit; }
+
+  .app{
+    position:relative;
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+    min-height:100dvh;
+    overflow:hidden;
+    background:var(--ink);
+  }
+
+  .screen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+  }
+  .screen[hidden]{ display:none; }
+
+  /* ============ pille / knapper ============ */
+  .pill{
+    appearance:none;
+    border:2px solid var(--line);
+    background:transparent;
+    color:var(--text);
+    border-radius:100px;
+    padding:9px 16px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .pill:active{ transform:scale(.96); }
+  .btn-amber{
+    appearance:none;
+    border:none;
+    background:var(--amber);
+    color:var(--ink);
+    border-radius:16px;
+    padding:17px;
+    font-size:16px;
+    font-weight:700;
+    text-align:center;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-amber:active{ transform:scale(.985); }
+  .btn-amber:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn-ghost{
+    appearance:none;
+    border:1px solid var(--line);
+    background:var(--surface2);
+    color:var(--text);
+    border-radius:14px;
+    padding:14px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-danger{ color:var(--red); border-color:#5a2a2a; }
+
+  /* ============ SCAN-SKÆRM ============ */
+  #screen-scan{ background:var(--ink); }
+  .camera-wrap{
+    position:absolute;
+    inset:0;
+    background:#000;
+  }
+  #video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .camera-fallback{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .scrim-bottom{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:46%;
+    background:linear-gradient(to top, rgba(12,17,25,.92), rgba(12,17,25,0));
+    pointer-events:none;
+  }
+
+  .topbar{
+    position:relative;
+    z-index:2;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:calc(20px + env(safe-area-inset-top)) 20px 0;
+  }
+  .brand h1{
+    margin:0;
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:.02em;
+    text-shadow:0 1px 6px rgba(0,0,0,.5);
+  }
+  .brand p{
+    margin:2px 0 0;
+    font-size:12px;
+    letter-spacing:.08em;
+    color:var(--amber);
+    text-transform:uppercase;
+    text-shadow:0 1px 6px rgba(0,0,0,.5);
+  }
+  .topbar-actions{ display:flex; gap:8px; }
+  .topbar-actions .pill{ background:rgba(21,28,40,.72); backdrop-filter:blur(6px); }
+
+  .reticle{
+    position:absolute;
+    left:50%; top:38%;
+    transform:translate(-50%,-50%);
+    width:min(300px, 78%);
+    height:96px;
+    border:2px solid var(--amber);
+    border-radius:14px;
+    z-index:1;
+  }
+  .reticle::before{
+    content:"";
+    position:absolute; inset:-2px;
+    border-radius:16px;
+    box-shadow:0 0 0 4000px rgba(0,0,0,.16);
+  }
+
+  .result-card{
+    position:relative;
+    z-index:2;
+    margin:16px;
+    margin-top:auto;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:20px;
+    max-height:38vh;
+    overflow-y:auto;
+  }
+  .chip-status{
+    display:inline-block;
+    background:var(--amber-dim);
+    color:var(--amber);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.03em;
+    padding:5px 12px;
+    border-radius:100px;
+  }
+  .chip-status.err{ background:#4a2323; color:var(--red); }
+  .chip-status.ok{ background:#1c3a2c; color:var(--green); }
+
+  .plate{
+    display:inline-flex;
+    align-items:stretch;
+    background:var(--plate-white);
+    border:2px solid rgba(0,0,0,.13);
+    border-radius:10px;
+    min-width:180px;
+    min-height:52px;
+    margin-top:16px;
+    overflow:hidden;
+  }
+  .plate .band{
+    background:var(--plate-blue);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 7px;
+  }
+  .plate .band span{ color:#fff; font-weight:700; font-size:12px; }
+  .plate .text{
+    display:flex; align-items:center;
+    padding:0 16px;
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:.1em;
+    color:var(--plate-ink);
+  }
+  .result-text{
+    margin-top:16px;
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--text);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .insurance-link{
+    display:none;
+    margin-top:12px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--amber);
+    text-decoration:none;
+    border-bottom:1px solid var(--amber);
+  }
+
+  .manual-row{
+    position:relative; z-index:2;
+    display:flex; gap:8px;
+    margin:0 16px 12px;
+  }
+  .manual-row input{
+    flex:1;
+    background:var(--surface2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:12px;
+    padding:12px 14px;
+    font-family:var(--font-mono);
+    font-size:15px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    min-width:0;
+  }
+  .manual-row input::placeholder{ color:var(--text-dim); text-transform:none; letter-spacing:normal; }
+  .manual-row button{
+    flex:none;
+    background:var(--surface2);
+    border:1px solid var(--line);
+    color:var(--amber);
+    border-radius:12px;
+    padding:0 16px;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+  }
+
+  .bottom-action{
+    position:relative; z-index:2;
+    padding:0 16px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  /* ============ HISTORIK / INDSTILLINGER ============ */
+  .simple-screen{ background:var(--ink); padding:0 0 24px; overflow-y:auto; }
+  .simple-top{
+    display:flex; align-items:center; gap:14px;
+    padding:calc(20px + env(safe-area-inset-top)) 20px 0;
+  }
+  .simple-screen h2{ margin:20px 20px 2px; font-size:26px; font-weight:700; }
+  .simple-screen .sub{ margin:0 20px 16px; color:var(--text-dim); font-size:14px; }
+
+  .empty-state{
+    margin:32px; text-align:center; color:var(--text-dim);
+    font-size:15px; line-height:1.7;
+  }
+
+  .scan-list{ list-style:none; margin:0; padding:0 16px; display:flex; flex-direction:column; gap:12px; }
+  .scan-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:20px;
+    padding:16px; cursor:pointer;
+  }
+  .scan-card:active{ transform:scale(.99); }
+  .scan-card-top{ display:flex; align-items:center; gap:10px; }
+  .scan-card-top .plate{ margin-top:0; min-width:140px; min-height:44px; }
+  .scan-card-top .plate .text{ font-size:18px; padding:0 12px; }
+  .scan-card-top .when{ flex:1; text-align:right; color:var(--text-dim); font-size:12px; }
+  .scan-card .car{ margin-top:12px; font-weight:700; font-size:16px; }
+  .scan-card .loc{ margin-top:4px; color:var(--text-dim); font-size:13px; font-family:var(--font-mono); }
+  .scan-card .del{
+    margin-top:12px; background:none; border:1px solid #5a2a2a; color:var(--red);
+    border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+
+  .field{ margin:0 20px 18px; }
+  .field label{ display:block; font-size:13px; font-weight:700; color:var(--text-dim); margin-bottom:8px; }
+  .field input, .field textarea{
+    width:100%; background:var(--surface2); border:1px solid var(--line); color:var(--text);
+    border-radius:12px; padding:13px 14px; font-family:var(--font-mono); font-size:14px;
+  }
+  .field textarea{ min-height:110px; resize:vertical; }
+  .field .hint{ margin-top:8px; font-size:12px; color:var(--text-dim); line-height:1.6; font-family:var(--font-body); }
+  .actions{ display:flex; flex-direction:column; gap:10px; margin:24px 20px 0; }
+  details.advanced{ margin:0 20px 18px; }
+  details.advanced summary{ color:var(--amber); font-weight:700; font-size:13px; cursor:pointer; }
+
+  /* ============ modal ============ */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:50;
+  }
+  .modal-backdrop[hidden]{ display:none; }
+  .modal{
+    width:100%; max-width:520px; max-height:82vh; overflow-y:auto;
+    background:var(--surface); border-radius:22px 22px 0 0;
+    padding:24px 20px calc(24px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+  }
+  .modal h3{ margin:0 0 4px; font-size:20px; }
+  .modal .body{
+    margin-top:14px; font-family:var(--font-mono); font-size:13.5px; line-height:1.8;
+    white-space:pre-wrap; color:var(--text);
+  }
+  .modal .close{ margin-top:20px; }
+
+  .toast{
+    position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom));
+    transform:translateX(-50%);
+    background:var(--surface2); border:1px solid var(--line); color:var(--text);
+    padding:11px 16px; border-radius:100px; font-size:13px; z-index:60;
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+    max-width:88%; text-align:center;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SCAN-SKÆRM ================= -->
+  <section class="screen" id="screen-scan">
+    <div class="camera-wrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="camera-fallback" id="cameraFallback" hidden>
+        Ingen adgang til kameraet.<br>Giv tilladelse i browseren, eller brug manuelt opslag herunder.
+      </div>
+      <div class="scrim-bottom"></div>
+    </div>
+
+    <div class="topbar">
+      <div class="brand">
+        <h1>Pladelog</h1>
+        <p>Scan · slå op · gem</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="pill" id="btnHistorik" type="button">Historik</button>
+        <button class="pill" id="btnIndstillinger" type="button" aria-label="Indstillinger">⚙</button>
+      </div>
+    </div>
+
+    <div class="reticle" id="reticle"></div>
+
+    <div class="result-card">
+      <span class="chip-status" id="status">Ret kameraet mod en nummerplade</span>
+
+      <div class="plate" id="plateChip" style="display:none;">
+        <div class="band"><span>DK</span></div>
+        <div class="text" id="plateText">AB 12 345</div>
+      </div>
+
+      <div class="result-text" id="resultText"></div>
+      <a class="insurance-link" id="insuranceLink" href="#" target="_blank" rel="noopener">Tjek forsikring på nummerplade.net ↗</a>
+    </div>
+
+    <div class="manual-row">
+      <input id="manualInput" type="text" inputmode="text" maxlength="9" placeholder="Indtast plade, fx AB12345">
+      <button id="manualBtn" type="button">Slå op</button>
+    </div>
+
+    <div class="bottom-action">
+      <button class="btn-amber" id="btnNulstil" type="button">Ny scanning</button>
+    </div>
+  </section>
+
+  <!-- ================= HISTORIK ================= -->
+  <section class="screen simple-screen" id="screen-history" hidden>
+    <div class="simple-top">
+      <button class="pill" id="btnHistorikTilbage" type="button">Tilbage</button>
+    </div>
+    <h2>Historik</h2>
+    <p class="sub" id="historySub">Alle dine scanninger</p>
+
+    <div class="empty-state" id="historyEmpty" hidden>
+      Ingen scanninger endnu.<br>Ret kameraet mod en plade for at komme i gang.
+    </div>
+    <ul class="scan-list" id="historyList"></ul>
+  </section>
+
+  <!-- ================= INDSTILLINGER ================= -->
+  <section class="screen simple-screen" id="screen-settings" hidden>
+    <div class="simple-top">
+      <button class="pill" id="btnSettingsTilbage" type="button">Tilbage</button>
+    </div>
+    <h2>Indstillinger</h2>
+    <p class="sub">Gemmes kun i din browser</p>
+
+    <div class="field">
+      <label for="inpApiKey">MotorAPI-nøgle</label>
+      <input id="inpApiKey" type="text" autocomplete="off" spellcheck="false" placeholder="Din nøgle fra motorapi.dk">
+      <p class="hint">Bruges til at slå bilfakta op på en scannet plade. Nøglen sendes kun direkte til MotorAPI fra din egen browser og gemmes lokalt på enheden — aldrig i denne side eller på GitHub.</p>
+    </div>
+
+    <details class="advanced">
+      <summary>Avanceret: Firebase-synkronisering (valgfrit)</summary>
+      <div class="field" style="margin-top:16px;">
+        <label for="inpFirebase">Firebase web-konfiguration (JSON)</label>
+        <textarea id="inpFirebase" spellcheck="false" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+        <p class="hint">Valgfrit. Indsæt "Web app"-konfigurationen fra dit eget Firebase-projekt (Project settings → General), så gemmes scanninger også i Firestore-samlingen "scans" — ligesom i Android-appen. Uden dette gemmes historikken kun lokalt i browseren.</p>
+      </div>
+    </details>
+
+    <div class="actions">
+      <button class="btn-ghost" id="btnGemIndstillinger" type="button">Gem indstillinger</button>
+      <button class="btn-ghost" id="btnEksporter" type="button">Eksportér historik (JSON)</button>
+      <button class="btn-ghost btn-danger" id="btnRydHistorik" type="button">Ryd historik</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ================= DETALJE-MODAL ================= -->
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal">
+    <h3 id="modalTitle">AB 12 345</h3>
+    <div class="body" id="modalBody"></div>
+    <button class="btn-ghost close" id="modalClose" type="button">Luk</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  /* ===================== Tilstand ===================== */
+  const CONFIRM_COUNT = 3;
+  const STORAGE_HISTORY = "pladelog_history";
+  const STORAGE_SETTINGS = "pladelog_settings";
+
+  const state = {
+    history: loadJSON(STORAGE_HISTORY, []),
+    settings: loadJSON(STORAGE_SETTINGS, {}),
+    lastLookedUp: null,
+    candidate: null,
+    candidateCount: 0,
+    busyLookup: false,
+    scanning: false,
+    ocrBusy: false,
+    lastLat: null,
+    lastLng: null,
+    ocrTimer: null,
+    worker: null,
+    fb: null // {db, addDoc, collection, getDocs, query, orderBy}
+  };
+
+  function loadJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  }
+  function saveHistory() {
+    try { localStorage.setItem(STORAGE_HISTORY, JSON.stringify(state.history)); } catch (e) {}
+  }
+  function saveSettings() {
+    try { localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(state.settings)); } catch (e) {}
+  }
+
+  /* ===================== DOM ===================== */
+  const $ = (id) => document.getElementById(id);
+  const video = $("video");
+  const cameraFallback = $("cameraFallback");
+  const statusEl = $("status");
+  const plateChip = $("plateChip");
+  const plateText = $("plateText");
+  const resultText = $("resultText");
+  const insuranceLink = $("insuranceLink");
+  const manualInput = $("manualInput");
+  const toastEl = $("toast");
+
+  const screens = {
+    scan: $("screen-scan"),
+    history: $("screen-history"),
+    settings: $("screen-settings")
+  };
+
+  function showScreen(name) {
+    for (const key in screens) screens[key].hidden = key !== name;
+    if (name === "history") renderHistory();
+    if (name === "settings") fillSettingsForm();
+    state.scanning = name === "scan";
+    if (state.scanning) scheduleOcr();
+  }
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toastEl.classList.remove("show"), 2600);
+  }
+
+  /* ===================== Nummerplade-genkendelse ===================== */
+  // Retter typiske OCR-fejl i bogstav- hhv. cifferposition (portet fra Android-appen).
+  function tilBogstav(c) {
+    switch (c) {
+      case "0": return "O"; case "1": return "I"; case "5": return "S";
+      case "8": return "B"; case "2": return "Z"; case "6": return "G";
+      default: return c;
+    }
+  }
+  function tilCiffer(c) {
+    switch (c) {
+      case "O": case "Q": case "D": return "0";
+      case "I": case "L": return "1";
+      case "Z": return "2"; case "S": return "5";
+      case "B": return "8"; case "G": return "6"; case "T": return "7";
+      default: return c;
+    }
+  }
+
+  /** Finder en dansk standardplade (2 bogstaver + 5 cifre) i en tekstlinje. */
+  function findPlade(raa) {
+    const kun = raa.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (kun.length < 7) return null;
+    for (let s = 0; s <= kun.length - 7; s++) {
+      const v = kun.substring(s, s + 7);
+      const bog = v.substring(0, 2).split("").map(tilBogstav).join("");
+      const cif = v.substring(2, 7).split("").map(tilCiffer).join("");
+      if (/^[A-Z]{2}$/.test(bog) && /^[0-9]{5}$/.test(cif)) return bog + cif;
+    }
+    return null;
+  }
+
+  /** Pæn visning: AB12345 -> "AB 12 345" */
+  function pen(p) {
+    return p && p.length === 7 ? `${p.slice(0,2)} ${p.slice(2,4)} ${p.slice(4,7)}` : (p || "");
+  }
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text;
+    statusEl.className = "chip-status" + (kind ? " " + kind : "");
+  }
+
+  /* ===================== Kamera + OCR ===================== */
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      cameraFallback.hidden = false;
+      setStatus("Kamera ikke understøttet", "err");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      video.srcObject = stream;
+      cameraFallback.hidden = true;
+      scheduleOcr();
+    } catch (e) {
+      cameraFallback.hidden = false;
+      setStatus("Adgang til kamera nægtet", "err");
+    }
+  }
+
+  async function getWorker() {
+    if (state.worker) return state.worker;
+    setStatus("Klargør tekstgenkendelse…");
+    state.worker = await Tesseract.createWorker("eng");
+    return state.worker;
+  }
+
+  const ocrCanvas = document.createElement("canvas");
+  const ocrCtx = ocrCanvas.getContext("2d", { willReadFrequently: true });
+
+  function scheduleOcr() {
+    clearTimeout(state.ocrTimer);
+    if (!state.scanning) return;
+    state.ocrTimer = setTimeout(runOcrCycle, 900);
+  }
+
+  async function runOcrCycle() {
+    if (!state.scanning) return;
+    if (state.ocrBusy || state.busyLookup || !video.videoWidth) { scheduleOcr(); return; }
+    state.ocrBusy = true;
+    try {
+      // Beskær til reticle-området og skalér ned for hurtigere genkendelse.
+      const rect = $("reticle").getBoundingClientRect();
+      const vRect = video.getBoundingClientRect();
+      const scaleX = video.videoWidth / vRect.width;
+      const scaleY = video.videoHeight / vRect.height;
+      const sx = Math.max(0, (rect.left - vRect.left) * scaleX);
+      const sy = Math.max(0, (rect.top - vRect.top) * scaleY);
+      const sw = Math.min(video.videoWidth - sx, rect.width * scaleX);
+      const sh = Math.min(video.videoHeight - sy, rect.height * scaleY);
+
+      const outW = 480;
+      const outH = Math.round(outW * (sh / sw));
+      ocrCanvas.width = outW;
+      ocrCanvas.height = outH;
+      ocrCtx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
+
+      const worker = await getWorker();
+      const { data } = await worker.recognize(ocrCanvas);
+      const text = (data && data.text) || "";
+      let fundet = null;
+      for (const linje of text.split(/\n+/)) {
+        fundet = findPlade(linje);
+        if (fundet) break;
+      }
+      if (!fundet) fundet = findPlade(text);
+      if (fundet) handleCandidate(fundet);
+      else if (!state.busyLookup) setStatus("Ret kameraet mod en nummerplade");
+    } catch (e) {
+      // Stille fejl — prøver igen ved næste cyklus.
+    } finally {
+      state.ocrBusy = false;
+      scheduleOcr();
+    }
+  }
+
+  function handleCandidate(plade) {
+    if (plade === state.lastLookedUp) return;
+    if (plade === state.candidate) state.candidateCount++;
+    else { state.candidate = plade; state.candidateCount = 1; }
+
+    setStatus(`Læser ${pen(plade)} · ${state.candidateCount}/${CONFIRM_COUNT}`);
+
+    if (state.candidateCount >= CONFIRM_COUNT && !state.busyLookup) {
+      state.busyLookup = true;
+      state.lastLookedUp = plade;
+      state.candidate = null; state.candidateCount = 0;
+      updateLocation();
+      lookupPlade(plade);
+    }
+  }
+
+  function nulstil() {
+    state.lastLookedUp = null;
+    state.candidate = null;
+    state.candidateCount = 0;
+    setStatus("Ret kameraet mod en nummerplade");
+    plateChip.style.display = "none";
+    resultText.textContent = "";
+    insuranceLink.style.display = "none";
+  }
+
+  /* ===================== GPS ===================== */
+  function updateLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { state.lastLat = pos.coords.latitude; state.lastLng = pos.coords.longitude; },
+      () => {},
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 30000 }
+    );
+  }
+
+  /* ===================== Manuelt opslag ===================== */
+  $("manualBtn").addEventListener("click", () => {
+    const raw = manualInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!/^[A-Z]{2}[0-9]{5}$/.test(raw)) {
+      toast("Skriv en dansk plade som AB12345");
+      return;
+    }
+    manualInput.value = "";
+    state.lastLookedUp = null;
+    if (state.busyLookup) return;
+    state.busyLookup = true;
+    state.lastLookedUp = raw;
+    updateLocation();
+    lookupPlade(raw);
+  });
+
+  /* ===================== MotorAPI-opslag ===================== */
+  async function lookupPlade(plade) {
+    const key = (state.settings.motorApiKey || "").trim();
+    if (!key) {
+      setStatus("API-nøgle mangler", "err");
+      resultText.textContent = "Indtast din MotorAPI-nøgle under Indstillinger (⚙) for at slå plader op.";
+      state.busyLookup = false;
+      return;
+    }
+    setStatus(`Slår ${pen(plade)} op…`);
+    try {
+      const res = await fetch(`https://v1.motorapi.dk/vehicles/${plade}`, {
+        headers: { "X-AUTH-TOKEN": key, "Accept": "application/json" }
+      });
+      const krop = await res.text();
+      if (res.status === 200) await visOgGem(plade, krop);
+      else visFejl(res.status);
+    } catch (e) {
+      setStatus("Netværksfejl", "err");
+      resultText.textContent =
+        "Kunne ikke kontakte MotorAPI fra browseren. Nogle API'er tillader ikke kald direkte fra en webside (CORS) " +
+        "— tjek din forbindelse, eller kontakt MotorAPI for browser-adgang.";
+      state.busyLookup = false;
+    }
+  }
+
+  function visFejl(kode) {
+    const besked = {
+      401: "API-nøglen blev afvist (401). Tjek nøglen under Indstillinger.",
+      404: "Ingen bil fundet (404). Måske læst forkert — prøv igen.",
+      429: "Dagens gratis opslag er brugt op (429)."
+    }[kode] || `Uventet svar (HTTP ${kode}).`;
+    setStatus("Fejl", "err");
+    resultText.textContent = besked;
+    state.busyLookup = false;
+  }
+
+  async function visOgGem(plade, krop) {
+    let o;
+    try {
+      const trimmed = krop.trim();
+      const parsed = JSON.parse(trimmed);
+      o = Array.isArray(parsed) ? parsed[0] : parsed;
+      if (!o) { visFejl(404); return; }
+    } catch (e) {
+      setStatus("Fejl", "err");
+      resultText.textContent = "Kunne ikke læse svaret fra MotorAPI.";
+      state.busyLookup = false;
+      return;
+    }
+
+    const f = (...keys) => {
+      for (const k of keys) {
+        if (o[k] !== undefined && o[k] !== null && String(o[k]).trim() !== "") return String(o[k]);
+      }
+      return "-";
+    };
+
+    const maerke = f("brand", "make");
+    const model = f("model");
+    const aargang = f("model_year", "year");
+    const braendstof = f("fuel_type", "fuel");
+
+    const visning = [
+      `Variant:   ${f("variant", "version")}`,
+      `Brændstof: ${braendstof}`,
+      `Farve:     ${f("color", "colour")}`,
+      `1. reg.:   ${f("first_registration", "first_registration_date")}`,
+      `Status:    ${f("status", "registration_status")}`,
+      `Stelnr.:   ${f("vin", "chassis_number")}`
+    ].join("\n");
+
+    setStatus("Gemt i loggen", "ok");
+    plateChip.style.display = "inline-flex";
+    plateText.textContent = pen(plade);
+    resultText.textContent = `${maerke} ${model}  ·  ${aargang}\n\n${visning}`;
+
+    insuranceLink.href = `https://www.nummerplade.net/nummerplade/${plade.toLowerCase()}.html`;
+    insuranceLink.style.display = "inline-block";
+
+    const scan = {
+      plade, maerke, model, aargang, braendstof,
+      forsikring: "", // hentes ikke automatisk i webversionen (CORS) — se link i kortet
+      raaData: krop,
+      latitude: state.lastLat, longitude: state.lastLng,
+      tidspunkt: Date.now()
+    };
+    gemScan(scan);
+    state.busyLookup = false;
+  }
+
+  /* ===================== Gem / hent historik ===================== */
+  function gemScan(scan) {
+    state.history.unshift(scan);
+    saveHistory();
+    if (state.fb) {
+      firestoreGem(scan).catch(() => {});
+    }
+  }
+
+  async function firestoreGem(scan) {
+    const { db, addDoc, collection } = state.fb;
+    await addDoc(collection(db, "scans"), scan);
+  }
+
+  async function firestoreHentAlle() {
+    const { db, getDocs, collection, query, orderBy } = state.fb;
+    const snap = await getDocs(query(collection(db, "scans"), orderBy("tidspunkt", "desc")));
+    return snap.docs.map((d) => d.data());
+  }
+
+  async function initFirebase() {
+    const cfgRaw = (state.settings.firebaseConfig || "").trim();
+    if (!cfgRaw) { state.fb = null; return; }
+    try {
+      const cfg = JSON.parse(cfgRaw);
+      const [{ initializeApp }, fs] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js")
+      ]);
+      const app = initializeApp(cfg);
+      const db = fs.getFirestore(app);
+      state.fb = { db, addDoc: fs.addDoc, collection: fs.collection, getDocs: fs.getDocs, query: fs.query, orderBy: fs.orderBy };
+      try {
+        const fjern = await firestoreHentAlle();
+        if (fjern.length) { state.history = fjern; saveHistory(); }
+      } catch (e) { /* fortsæt med lokal historik */ }
+    } catch (e) {
+      console.warn("Firebase kunne ikke initialiseres", e);
+      state.fb = null;
+    }
+  }
+
+  /* ===================== Historik-visning ===================== */
+  const dateFmt = new Intl.DateTimeFormat("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  function renderHistory() {
+    const list = $("historyList");
+    const empty = $("historyEmpty");
+    $("historySub").textContent = state.history.length
+      ? `${state.history.length} scanning${state.history.length === 1 ? "" : "er"}`
+      : "Alle dine scanninger";
+
+    list.innerHTML = "";
+    if (!state.history.length) {
+      empty.hidden = false;
+      list.hidden = true;
+      return;
+    }
+    empty.hidden = true;
+    list.hidden = false;
+
+    state.history.forEach((s, i) => {
+      const li = document.createElement("li");
+      li.className = "scan-card";
+      const bil = [s.maerke, s.model, s.aargang].filter((v) => v && v !== "-").join(" ") || "Ukendt køretøj";
+      const lok = (s.latitude != null && s.longitude != null)
+        ? `⌖ ${s.latitude.toFixed(5)}, ${s.longitude.toFixed(5)}`
+        : "⌖ ingen lokation";
+
+      li.innerHTML = `
+        <div class="scan-card-top">
+          <div class="plate"><div class="band"><span>DK</span></div><div class="text">${pen(s.plade)}</div></div>
+          <div class="when">${dateFmt.format(new Date(s.tidspunkt))}</div>
+        </div>
+        <div class="car"></div>
+        <div class="loc"></div>
+        <button class="del" type="button">Slet</button>
+      `;
+      li.querySelector(".car").textContent = bil;
+      li.querySelector(".loc").textContent = lok;
+      li.addEventListener("click", (ev) => {
+        if (ev.target.closest(".del")) return;
+        visDetaljer(s);
+      });
+      li.querySelector(".del").addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        state.history.splice(i, 1);
+        saveHistory();
+        renderHistory();
+      });
+      list.appendChild(li);
+    });
+  }
+
+  function visDetaljer(s) {
+    let o = null;
+    try {
+      const t = (s.raaData || "").trim();
+      if (t.startsWith("[")) o = JSON.parse(t)[0];
+      else if (t.startsWith("{")) o = JSON.parse(t);
+    } catch (e) {}
+
+    const f = (...keys) => {
+      if (!o) return "-";
+      for (const k of keys) {
+        if (o[k] !== undefined && o[k] !== null && String(o[k]).trim() !== "") return String(o[k]);
+      }
+      return "-";
+    };
+    const bil = [s.maerke, s.model, s.aargang].filter((v) => v && v !== "-").join(" ") || "Ukendt køretøj";
+
+    const linjer = [
+      bil, "",
+      `Variant:   ${f("variant", "version")}`,
+      `Brændstof: ${s.braendstof || "-"}`,
+      `Farve:     ${f("color", "colour")}`,
+      `1. reg.:   ${f("first_registration", "first_registration_date")}`,
+      `Status:    ${f("status", "registration_status")}`,
+      `Stelnr.:   ${f("vin", "chassis_number")}`, "",
+      `Scannet:   ${dateFmt.format(new Date(s.tidspunkt))}`
+    ];
+    if (s.latitude != null && s.longitude != null) {
+      linjer.push(`Lokation:  ${s.latitude.toFixed(5)}, ${s.longitude.toFixed(5)}`);
+    }
+    linjer.push("", `Forsikring: se nummerplade.net/nummerplade/${s.plade.toLowerCase()}.html`);
+
+    $("modalTitle").textContent = pen(s.plade);
+    $("modalBody").textContent = linjer.join("\n");
+    $("modalBackdrop").hidden = false;
+  }
+
+  /* ===================== Indstillinger ===================== */
+  function fillSettingsForm() {
+    $("inpApiKey").value = state.settings.motorApiKey || "";
+    $("inpFirebase").value = state.settings.firebaseConfig || "";
+  }
+
+  $("btnGemIndstillinger").addEventListener("click", async () => {
+    state.settings.motorApiKey = $("inpApiKey").value.trim();
+    const fbVal = $("inpFirebase").value.trim();
+    if (fbVal) {
+      try { JSON.parse(fbVal); }
+      catch (e) { toast("Firebase-konfigurationen er ikke gyldig JSON"); return; }
+    }
+    state.settings.firebaseConfig = fbVal;
+    saveSettings();
+    toast("Indstillinger gemt");
+    await initFirebase();
+  });
+
+  $("btnRydHistorik").addEventListener("click", () => {
+    if (!state.history.length) { toast("Historikken er allerede tom"); return; }
+    if (!confirm("Slet hele historikken? Dette kan ikke fortrydes.")) return;
+    state.history = [];
+    saveHistory();
+    toast("Historik ryddet");
+  });
+
+  $("btnEksporter").addEventListener("click", () => {
+    if (!state.history.length) { toast("Ingen historik at eksportere"); return; }
+    const blob = new Blob([JSON.stringify(state.history, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pladelog-historik-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  /* ===================== Navigation ===================== */
+  $("btnHistorik").addEventListener("click", () => showScreen("history"));
+  $("btnHistorikTilbage").addEventListener("click", () => showScreen("scan"));
+  $("btnIndstillinger").addEventListener("click", () => showScreen("settings"));
+  $("btnSettingsTilbage").addEventListener("click", () => showScreen("scan"));
+  $("btnNulstil").addEventListener("click", nulstil);
+  $("modalClose").addEventListener("click", () => { $("modalBackdrop").hidden = true; });
+  $("modalBackdrop").addEventListener("click", (e) => { if (e.target.id === "modalBackdrop") $("modalBackdrop").hidden = true; });
+
+  /* ===================== Start ===================== */
+  (async function init() {
+    state.scanning = true;
+    await startCamera();
+    updateLocation();
+    await initFirebase();
+  })();
+})();
+</script>
+</body>
+</html>
