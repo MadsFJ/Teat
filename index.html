@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constellation Match</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f4f6f5;
+    --surface:#ffffff;
+    --surface-2:#eaf0ee;
+    --border:#d5deda;
+    --text:#0f1a1a;
+    --text-muted:#546462;
+    --accent:#0b8f7c;
+    --accent-contrast:#ffffff;
+    --accent-amber:#a86a09;
+    --danger:#ad2c22;
+    --scope-shadow: inset 0 0 0 1px var(--border), inset 0 2px 10px rgba(15,26,26,.06);
+    --font-display:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-body:'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0e10;
+      --surface:#11181a;
+      --surface-2:#172023;
+      --border:#263133;
+      --text:#e9f2f0;
+      --text-muted:#87999b;
+      --accent:#52e0c4;
+      --accent-contrast:#06231d;
+      --accent-amber:#f6ad3c;
+      --danger:#ff6b60;
+      --scope-shadow: inset 0 0 0 1px var(--border), inset 0 2px 14px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0e10;
+    --surface:#11181a;
+    --surface-2:#172023;
+    --border:#263133;
+    --text:#e9f2f0;
+    --text-muted:#87999b;
+    --accent:#52e0c4;
+    --accent-contrast:#06231d;
+    --accent-amber:#f6ad3c;
+    --danger:#ff6b60;
+    --scope-shadow: inset 0 0 0 1px var(--border), inset 0 2px 14px rgba(0,0,0,.35);
+  }
+
+  *{ box-sizing:border-box; }
+  html, body{ margin:0; background:var(--bg); }
+  body{
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:720px;
+    margin:0 auto;
+    padding:32px 20px 56px;
+    display:flex;
+    flex-direction:column;
+    gap:24px;
+  }
+
+  .hero{ display:flex; flex-direction:column; gap:10px; }
+  .eyebrow{
+    margin:0;
+    font-family:var(--font-display);
+    font-size:12px;
+    letter-spacing:.14em;
+    color:var(--accent);
+    font-weight:600;
+  }
+  h1{
+    margin:0;
+    font-family:var(--font-display);
+    font-size:clamp(28px, 6vw, 40px);
+    font-weight:700;
+    letter-spacing:-0.01em;
+    text-wrap:balance;
+  }
+  .lede{
+    margin:0;
+    max-width:62ch;
+    color:var(--text-muted);
+    font-size:15px;
+    line-height:1.6;
+  }
+
+  .tabs{
+    display:flex;
+    gap:2px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:3px;
+  }
+  .tab{
+    flex:1;
+    appearance:none;
+    border:none;
+    background:transparent;
+    color:var(--text-muted);
+    font-family:var(--font-display);
+    font-size:13px;
+    letter-spacing:.06em;
+    font-weight:600;
+    padding:10px 14px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .tab[aria-selected="true"]{
+    background:var(--surface);
+    color:var(--text);
+    box-shadow:0 0 0 1px var(--border);
+  }
+  .tab:focus-visible, .btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  .status{
+    font-family:var(--font-display);
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+  }
+  .status-error{ border-color:var(--danger); color:var(--danger); }
+  .status-success{ border-color:var(--accent); color:var(--accent); }
+
+  .panel{ display:flex; flex-direction:column; gap:16px; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .card-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .card-header h2{ margin:0; font-size:15px; font-weight:600; }
+  .pill{
+    font-family:var(--font-display);
+    font-size:12px;
+    color:var(--text-muted);
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:3px 10px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .field-label{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-muted);
+  }
+  input[type="text"]{
+    width:100%;
+    font-family:var(--font-body);
+    font-size:15px;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+  }
+
+  .source-row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .btn{
+    appearance:none;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:14px;
+    font-weight:600;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    flex:1;
+    min-width:140px;
+  }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn-secondary:hover:not(:disabled){ border-color:var(--accent); }
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--accent-contrast);
+    flex:none;
+    width:100%;
+  }
+  .btn-large{ padding:16px; font-size:16px; }
+  .btn-danger{
+    background:transparent;
+    border-color:var(--danger);
+    color:var(--danger);
+    flex:none;
+  }
+  .btn-icon{
+    flex:none;
+    min-width:auto;
+    width:32px;
+    height:32px;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-muted);
+  }
+  .btn-icon:hover{ color:var(--danger); border-color:var(--danger); }
+
+  .capture-row{ display:flex; flex-direction:column; gap:10px; }
+  .capture-meta{ display:flex; align-items:center; gap:10px; }
+  .rec-dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--danger);
+    flex:none;
+    animation:pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  @media (prefers-reduced-motion:reduce){ .rec-dot{ animation:none; } }
+  #enrollTimer, #identifyTimer{
+    font-family:var(--font-display);
+    font-size:14px;
+    font-variant-numeric:tabular-nums;
+    min-width:38px;
+  }
+  .level-meter{ flex:1; height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden; box-shadow:inset 0 0 0 1px var(--border); }
+  .level-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-amber)); }
+
+  .scope{
+    display:block;
+    width:100%;
+    height:auto;
+    background:var(--surface-2);
+    border-radius:8px;
+    box-shadow:var(--scope-shadow);
+  }
+
+  .preview{ display:flex; flex-direction:column; gap:8px; }
+  .preview-title{ margin:0; font-size:13px; font-weight:600; color:var(--text-muted); }
+  .preview-meta{ margin:0; font-family:var(--font-display); font-size:12px; color:var(--text-muted); }
+
+  .library-list{ display:flex; flex-direction:column; gap:8px; }
+  .empty-hint{ margin:0; color:var(--text-muted); font-size:14px; }
+  .library-row{
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+  .library-name-input{
+    background:transparent;
+    border:none;
+    padding:2px 0;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+    min-width:0;
+  }
+  .library-meta{
+    font-family:var(--font-display);
+    font-size:12px;
+    color:var(--text-muted);
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .identify-card{ align-items:stretch; }
+  .hint{ margin:0; font-size:13px; color:var(--text-muted); min-height:18px; }
+
+  .result{
+    border-radius:10px;
+    border:1px solid var(--border);
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .result-match{ border-color:var(--accent); }
+  .result-none{ border-color:var(--danger); }
+  .result-title{ margin:0; font-family:var(--font-display); font-size:17px; font-weight:600; }
+  .result-match .result-title{ color:var(--accent); }
+  .result-none .result-title{ color:var(--danger); }
+  .result-sub{ margin:0; font-size:13px; color:var(--text-muted); }
+  .confidence-bar{ height:10px; border-radius:5px; background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--border); overflow:hidden; }
+  .confidence-fill{ height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-amber)); }
+
+  .footnote{ border-top:1px solid var(--border); padding-top:16px; }
+  .footnote p{ margin:0; font-size:12.5px; line-height:1.6; color:var(--text-muted); }
+
+  @media (max-width:480px){
+    .source-row{ flex-direction:column; }
+    .btn{ min-width:0; }
+    .library-row{ grid-template-columns:1fr; }
+    .library-meta{ white-space:normal; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="hero">
+    <p class="eyebrow">BROWSER-ONLY AUDIO FINGERPRINTING</p>
+    <h1>Constellation Match</h1>
+    <p class="lede">Enroll a track, then play it back to identify it — everything runs in this tab: the FFT, peak-picking, hashing, and matching. It recognizes the exact recording you enrolled, not covers, remixes, or live versions.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab" id="tabEnroll" data-mode="enroll" role="tab" aria-selected="true">Enroll</button>
+    <button type="button" class="tab" id="tabIdentify" data-mode="identify" role="tab" aria-selected="false">Identify</button>
+  </div>
+
+  <div id="statusBar" class="status" hidden></div>
+
+  <section id="enrollPanel" class="panel">
+    <div class="card">
+      <div>
+        <label for="songNameInput" class="field-label">Track name</label>
+        <input id="songNameInput" type="text" placeholder="e.g. Late Night Drive" maxlength="60" autocomplete="off">
+      </div>
+
+      <div class="source-row">
+        <button type="button" class="btn btn-secondary" id="uploadBtn">Upload audio file</button>
+        <input type="file" id="fileInput" accept="audio/*" hidden>
+        <button type="button" class="btn btn-secondary" id="recordEnrollBtn">Record from mic</button>
+      </div>
+
+      <div class="capture-row" id="enrollCaptureRow" hidden>
+        <div class="capture-meta">
+          <span class="rec-dot" aria-hidden="true"></span>
+          <span id="enrollTimer">0:00</span>
+          <div class="level-meter"><div class="level-fill" id="enrollLevelFill"></div></div>
+        </div>
+        <canvas class="scope" id="enrollLiveCanvas" width="640" height="90"></canvas>
+        <button type="button" class="btn btn-danger" id="stopEnrollBtn">Stop recording</button>
+      </div>
+
+      <div class="preview" id="enrollPreview" hidden>
+        <p class="preview-title">Last fingerprint — constellation map</p>
+        <canvas class="scope" id="enrollConstellation" width="640" height="160"></canvas>
+        <p class="preview-meta" id="enrollPreviewMeta"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Library</h2>
+        <span class="pill" id="libraryCount">0 tracks</span>
+      </div>
+      <div class="library-list" id="libraryList">
+        <p class="empty-hint">No tracks enrolled yet. Upload a file or record a clip above.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="identifyPanel" class="panel" hidden>
+    <div class="card identify-card">
+      <p class="field-label">Capture 8 seconds and match it against your library.</p>
+      <button type="button" class="btn btn-primary btn-large" id="listenBtn">Listen</button>
+      <p class="hint" id="identifyHint">Enroll at least one track before identifying.</p>
+
+      <div class="capture-row" id="identifyCaptureRow" hidden>
+        <div class="capture-meta">
+          <span class="rec-dot" aria-hidden="true"></span>
+          <span id="identifyTimer">0:08</span>
+          <div class="level-meter"><div class="level-fill" id="identifyLevelFill"></div></div>
+        </div>
+        <canvas class="scope" id="identifyLiveCanvas" width="640" height="90"></canvas>
+      </div>
+
+      <div class="result" id="identifyResult" hidden></div>
+
+      <div class="preview" id="identifyPreview" hidden>
+        <p class="preview-title">Query constellation map</p>
+        <canvas class="scope" id="identifyConstellation" width="640" height="160"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footnote">
+    <p>Audio is processed entirely in your browser and never uploaded anywhere. Matching uses a simplified constellation-hashing scheme inspired by Shazam's published approach, tuned here for a clear, working demo rather than production-grade accuracy.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // =====================================================================
+  // CONFIG — tuning constants for the fingerprinting pipeline.
+  // These are heuristic choices for a legible demo, not accuracy-optimized.
+  // =====================================================================
+  var CONFIG = {
+    fftSize: 2048,            // FFT window size (samples)
+    hopSize: 512,             // samples between successive windows (75% overlap)
+    minFreqHz: 30,            // ignore near-DC content
+    maxFreqHz: 5000,          // most identifying musical energy lives below this
+    freqNeighborhood: 6,      // peak must be a local max within +-N frequency bins
+    timeNeighborhood: 3,      // ...and within +-N time frames
+    dynamicRangeDb: 45,       // peak must be within this many dB of the loudest bin
+    maxPeaksPerFingerprint: 600,
+    targetZoneMinDt: 1,       // hashing: forward target zone, in frames
+    targetZoneMaxDt: 90,
+    fanOut: 5,                // max hash pairs generated per anchor peak
+    offsetBinSize: 2,         // tolerance (frames) when histogramming time offsets
+    minMatchCount: 6,         // minimum matching pairs in one offset bin to call it a match
+    identifyDurationSec: 8
+  };
+
+  // =====================================================================
+  // DSP: FFT
+  // Iterative, in-place radix-2 Cooley-Tukey FFT. `re`/`im` are Float32Array
+  // of equal, power-of-two length; the transform overwrites them.
+  // =====================================================================
+  function fft(re, im) {
+    var n = re.length;
+    for (var i = 1, j = 0; i < n; i++) {
+      var bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) {
+        var tr = re[i]; re[i] = re[j]; re[j] = tr;
+        var ti = im[i]; im[i] = im[j]; im[j] = ti;
+      }
+    }
+    for (var len = 2; len <= n; len <<= 1) {
+      var ang = -2 * Math.PI / len;
+      var wRe = Math.cos(ang), wIm = Math.sin(ang);
+      for (var start = 0; start < n; start += len) {
+        var curRe = 1, curIm = 0;
+        var half = len >> 1;
+        for (var k = 0; k < half; k++) {
+          var uRe = re[start + k], uIm = im[start + k];
+          var vRe = re[start + k + half] * curRe - im[start + k + half] * curIm;
+          var vIm = re[start + k + half] * curIm + im[start + k + half] * curRe;
+          re[start + k] = uRe + vRe;
+          im[start + k] = uIm + vIm;
+          re[start + k + half] = uRe - vRe;
+          im[start + k + half] = uIm - vIm;
+          var nextRe = curRe * wRe - curIm * wIm;
+          var nextIm = curRe * wIm + curIm * wRe;
+          curRe = nextRe; curIm = nextIm;
+        }
+      }
+    }
+  }
+
+  function hannWindow(size) {
+    var w = new Float32Array(size);
+    for (var i = 0; i < size; i++) {
+      w[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (size - 1));
+    }
+    return w;
+  }
+
+  // =====================================================================
+  // DSP: spectrogram
+  // Slides a windowed FFT over mono PCM samples, hop by hop, and returns
+  // the magnitude spectrum of every frame.
+  // =====================================================================
+  function computeSpectrogram(samples, sampleRate, fftSize, hopSize) {
+    var window = hannWindow(fftSize);
+    var padded = samples;
+    if (padded.length < fftSize) {
+      var p = new Float32Array(fftSize);
+      p.set(padded);
+      padded = p;
+    }
+    var numFrames = Math.floor((padded.length - fftSize) / hopSize) + 1;
+    var frames = new Array(numFrames);
+    var re = new Float32Array(fftSize);
+    var im = new Float32Array(fftSize);
+    for (var f = 0; f < numFrames; f++) {
+      var start = f * hopSize;
+      for (var i = 0; i < fftSize; i++) {
+        re[i] = padded[start + i] * window[i];
+        im[i] = 0;
+      }
+      fft(re, im);
+      var half = fftSize >> 1;
+      var mag = new Float32Array(half);
+      for (var b = 0; b < half; b++) {
+        mag[b] = Math.sqrt(re[b] * re[b] + im[b] * im[b]);
+      }
+      frames[f] = mag;
+    }
+    return { frames: frames, numFrames: numFrames, binHz: sampleRate / fftSize, frameHopSec: hopSize / sampleRate };
+  }
+
+  // =====================================================================
+  // Fingerprinting: peak detection
+  // Finds local maxima in the time/frequency grid — points that are the
+  // loudest thing in their own neighborhood and within `dynamicRangeDb` of
+  // the loudest point overall. These form the "constellation map".
+  // =====================================================================
+  function findConstellationPeaks(frames, binHz, opts) {
+    var numFrames = frames.length;
+    var numBins = frames[0].length;
+    var minBin = Math.max(1, Math.floor(opts.minFreqHz / binHz));
+    var maxBin = Math.min(numBins - 1, Math.ceil(opts.maxFreqHz / binHz));
+
+    // Convert to dB once; makes both thresholding and comparisons cheap.
+    var db = new Array(numFrames);
+    var globalMaxDb = -Infinity;
+    for (var t = 0; t < numFrames; t++) {
+      var row = new Float32Array(numBins);
+      var mag = frames[t];
+      for (var f = minBin; f <= maxBin; f++) {
+        var v = 20 * Math.log10(mag[f] + 1e-6);
+        row[f] = v;
+        if (v > globalMaxDb) globalMaxDb = v;
+      }
+      db[t] = row;
+    }
+    var threshold = globalMaxDb - opts.dynamicRangeDb;
+
+    var peaks = [];
+    for (var ti = 0; ti < numFrames; ti++) {
+      for (var fi = minBin; fi <= maxBin; fi++) {
+        var val = db[ti][fi];
+        if (val < threshold) continue;
+        var isPeak = true;
+        for (var dt = -opts.timeNeighborhood; dt <= opts.timeNeighborhood && isPeak; dt++) {
+          var tt = ti + dt;
+          if (tt < 0 || tt >= numFrames) continue;
+          for (var df = -opts.freqNeighborhood; df <= opts.freqNeighborhood; df++) {
+            if (dt === 0 && df === 0) continue;
+            var ff = fi + df;
+            if (ff < minBin || ff > maxBin) continue;
+            if (db[tt][ff] > val) { isPeak = false; break; }
+          }
+        }
+        if (isPeak) peaks.push({ t: ti, f: fi, mag: val });
+      }
+    }
+
+    // Cap the constellation size by keeping the strongest peaks, then
+    // re-sort by time (required for hashing's forward target zone).
+    peaks.sort(function (a, b) { return b.mag - a.mag; });
+    if (peaks.length > opts.maxPeaksPerFingerprint) {
+      peaks = peaks.slice(0, opts.maxPeaksPerFingerprint);
+    }
+    peaks.sort(function (a, b) { return a.t - b.t; });
+    return peaks;
+  }
+
+  // =====================================================================
+  // Fingerprinting: combinatorial hashing
+  // Pairs each anchor peak with a handful of peaks ahead of it in time
+  // (its "target zone"). Each pair becomes a hash of (f1, f2, dt) — a
+  // shape that is very unlikely to recur by chance, but recurs exactly
+  // if the same audio is heard again.
+  // =====================================================================
+  function generateHashes(peaks, opts) {
+    var hashes = [];
+    for (var i = 0; i < peaks.length; i++) {
+      var anchor = peaks[i];
+      var paired = 0;
+      for (var j = i + 1; j < peaks.length && paired < opts.fanOut; j++) {
+        var target = peaks[j];
+        var dt = target.t - anchor.t;
+        if (dt < opts.targetZoneMinDt) continue;
+        if (dt > opts.targetZoneMaxDt) break; // peaks are time-sorted
+        hashes.push({ hash: anchor.f + "|" + target.f + "|" + dt, t: anchor.t });
+        paired++;
+      }
+    }
+    return hashes;
+  }
+
+  function toMonoSamples(audioBuffer) {
+    var channels = audioBuffer.numberOfChannels;
+    if (channels === 1) return audioBuffer.getChannelData(0).slice();
+    var length = audioBuffer.length;
+    var out = new Float32Array(length);
+    for (var c = 0; c < channels; c++) {
+      var data = audioBuffer.getChannelData(c);
+      for (var i = 0; i < length; i++) out[i] += data[i] / channels;
+    }
+    return out;
+  }
+
+  // Top-level: AudioBuffer -> { peaks, hashes, ... }. Used for every
+  // source — uploaded files, enrolled mic clips, and query captures —
+  // so enrolling and identifying always run the exact same pipeline.
+  function fingerprintAudioBuffer(audioBuffer) {
+    var samples = toMonoSamples(audioBuffer);
+    var spec = computeSpectrogram(samples, audioBuffer.sampleRate, CONFIG.fftSize, CONFIG.hopSize);
+    var peaks = findConstellationPeaks(spec.frames, spec.binHz, CONFIG);
+    var hashes = generateHashes(peaks, CONFIG);
+    return {
+      peaks: peaks,
+      hashes: hashes,
+      numFrames: spec.numFrames,
+      numBins: spec.frames[0].length,
+      durationSec: audioBuffer.duration
+    };
+  }
+
+  // =====================================================================
+  // Library + matching
+  // =====================================================================
+  var library = [];       // { id, name, durationSec, hashes, peakCount }
+  var hashIndex = new Map(); // hash -> [{ songId, t }]
+
+  function rebuildIndex() {
+    hashIndex = new Map();
+    for (var s = 0; s < library.length; s++) {
+      var song = library[s];
+      for (var h = 0; h < song.hashes.length; h++) {
+        var entry = song.hashes[h];
+        var bucket = hashIndex.get(entry.hash);
+        if (!bucket) { bucket = []; hashIndex.set(entry.hash, bucket); }
+        bucket.push({ songId: song.id, t: entry.t });
+      }
+    }
+  }
+
+  // Matches a query fingerprint against the library. For every song, the
+  // matching hashes' (songTime - queryTime) offsets are histogrammed —
+  // a real match produces one sharp spike (the audio is time-aligned),
+  // while coincidental hash collisions scatter across many offsets.
+  function matchQuery(fp) {
+    var perSongBins = new Map();   // songId -> Map<bin, count>
+    var perSongTotal = new Map();  // songId -> total matching hashes
+
+    for (var i = 0; i < fp.hashes.length; i++) {
+      var qh = fp.hashes[i];
+      var bucket = hashIndex.get(qh.hash);
+      if (!bucket) continue;
+      for (var j = 0; j < bucket.length; j++) {
+        var m = bucket[j];
+        var offset = m.t - qh.t;
+        var bin = Math.round(offset / CONFIG.offsetBinSize);
+        var bins = perSongBins.get(m.songId);
+        if (!bins) { bins = new Map(); perSongBins.set(m.songId, bins); }
+        bins.set(bin, (bins.get(bin) || 0) + 1);
+        perSongTotal.set(m.songId, (perSongTotal.get(m.songId) || 0) + 1);
+      }
+    }
+
+    var results = [];
+    perSongBins.forEach(function (bins, songId) {
+      var peakCount = 0;
+      bins.forEach(function (c) { if (c > peakCount) peakCount = c; });
+      var total = perSongTotal.get(songId);
+      results.push({ songId: songId, peakCount: peakCount, total: total, coherence: peakCount / total });
+    });
+    results.sort(function (a, b) { return b.peakCount - a.peakCount; });
+
+    var best = results.length > 0 && results[0].peakCount >= CONFIG.minMatchCount ? results[0] : null;
+    return { results: results, best: best };
+  }
+
+  // =====================================================================
+  // Audio I/O helpers
+  // =====================================================================
+  var audioCtx = null;
+  function getAudioContext() {
+    if (!audioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function pickMimeType() {
+    var candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
+    for (var i = 0; i < candidates.length; i++) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])) {
+        return candidates[i];
+      }
+    }
+    return "";
+  }
+
+  function startRecording(stream) {
+    var mimeType = pickMimeType();
+    var recorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : undefined);
+    var chunks = [];
+    recorder.addEventListener("dataavailable", function (e) {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    });
+    var stopped = new Promise(function (resolve) {
+      recorder.addEventListener("stop", function () {
+        resolve(new Blob(chunks, { type: mimeType || "audio/webm" }));
+      });
+    });
+    recorder.start();
+    return { recorder: recorder, stopped: stopped };
+  }
+
+  function handleMicError(err) {
+    var msg;
+    if (err && (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")) {
+      msg = "Microphone access was denied. Allow microphone permission for this page and try again.";
+    } else if (err && err.name === "NotFoundError") {
+      msg = "No microphone was found on this device.";
+    } else if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      msg = "This browser doesn't support microphone capture. Try uploading an audio file instead.";
+    } else {
+      msg = "Couldn't access the microphone (" + ((err && err.message) || (err && err.name) || "unknown error") + ").";
+    }
+    showStatus(msg, "error");
+  }
+
+  // =====================================================================
+  // Visualization
+  // =====================================================================
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function drawLiveSpectrum(canvas, dataArray) {
+    var ctx = canvas.getContext("2d");
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    var accent = cssVar("--accent");
+    var barCount = Math.min(dataArray.length, 96); // upper bins carry little musical info
+    var barWidth = w / barCount;
+    for (var i = 0; i < barCount; i++) {
+      var v = dataArray[i] / 255;
+      var barH = v * h;
+      ctx.fillStyle = accent;
+      ctx.globalAlpha = 0.35 + v * 0.65;
+      ctx.fillRect(i * barWidth, h - barH, Math.max(1, barWidth - 1), barH);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function computeLevel(dataArray) {
+    var sum = 0;
+    for (var i = 0; i < dataArray.length; i++) sum += dataArray[i];
+    return sum / dataArray.length / 255;
+  }
+
+  // Static scatter plot of a finished constellation map — the actual
+  // peaks that were hashed, not a live view.
+  function drawConstellation(canvas, peaks, numFrames, numBins) {
+    var ctx = canvas.getContext("2d");
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    if (!peaks.length) return;
+    var accent = cssVar("--accent");
+    ctx.fillStyle = accent;
+    for (var i = 0; i < peaks.length; i++) {
+      var p = peaks[i];
+      var x = (p.t / Math.max(1, numFrames - 1)) * w;
+      var y = h - (p.f / Math.max(1, numBins - 1)) * h;
+      ctx.globalAlpha = 0.55;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function formatTime(sec) {
+    sec = Math.max(0, sec);
+    var m = Math.floor(sec / 60);
+    var s = Math.floor(sec % 60);
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  // =====================================================================
+  // UI wiring
+  // =====================================================================
+  var el = {};
+  [
+    "tabEnroll", "tabIdentify", "enrollPanel", "identifyPanel", "statusBar",
+    "songNameInput", "uploadBtn", "fileInput", "recordEnrollBtn",
+    "enrollCaptureRow", "enrollTimer", "enrollLevelFill", "enrollLiveCanvas", "stopEnrollBtn",
+    "enrollPreview", "enrollConstellation", "enrollPreviewMeta",
+    "libraryCount", "libraryList",
+    "listenBtn", "identifyHint", "identifyCaptureRow", "identifyTimer", "identifyLevelFill",
+    "identifyLiveCanvas", "identifyResult", "identifyPreview", "identifyConstellation"
+  ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+  var statusTimer = null;
+  function showStatus(msg, type) {
+    el.statusBar.textContent = msg;
+    el.statusBar.className = "status" + (type ? " status-" + type : "");
+    el.statusBar.hidden = false;
+    clearTimeout(statusTimer);
+    if (type !== "error") {
+      statusTimer = setTimeout(function () { el.statusBar.hidden = true; }, 4500);
+    }
+  }
+
+  function setMode(mode) {
+    el.tabEnroll.setAttribute("aria-selected", String(mode === "enroll"));
+    el.tabIdentify.setAttribute("aria-selected", String(mode === "identify"));
+    el.enrollPanel.hidden = mode !== "enroll";
+    el.identifyPanel.hidden = mode !== "identify";
+  }
+  el.tabEnroll.addEventListener("click", function () { setMode("enroll"); });
+  el.tabIdentify.addEventListener("click", function () { setMode("identify"); });
+
+  function updateIdentifyAvailability() {
+    var empty = library.length === 0;
+    el.listenBtn.disabled = empty;
+    el.identifyHint.textContent = empty ? "Enroll at least one track before identifying." : "";
+  }
+
+  function renderLibrary() {
+    el.libraryCount.textContent = library.length + (library.length === 1 ? " track" : " tracks");
+    el.libraryList.innerHTML = "";
+    if (library.length === 0) {
+      var hint = document.createElement("p");
+      hint.className = "empty-hint";
+      hint.textContent = "No tracks enrolled yet. Upload a file or record a clip above.";
+      el.libraryList.appendChild(hint);
+      updateIdentifyAvailability();
+      return;
+    }
+    library.forEach(function (song) {
+      var row = document.createElement("div");
+      row.className = "library-row";
+
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "library-name-input";
+      nameInput.value = song.name;
+      nameInput.setAttribute("aria-label", "Track name");
+      nameInput.addEventListener("change", function () {
+        song.name = nameInput.value.trim() || song.name;
+      });
+
+      var meta = document.createElement("span");
+      meta.className = "library-meta";
+      meta.textContent = formatTime(song.durationSec) + " · " + song.hashes.length + " fingerprints";
+
+      var delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn btn-icon";
+      delBtn.setAttribute("aria-label", "Remove " + song.name);
+      delBtn.textContent = "✕";
+      delBtn.addEventListener("click", function () {
+        library = library.filter(function (s) { return s.id !== song.id; });
+        rebuildIndex();
+        renderLibrary();
+      });
+
+      row.appendChild(nameInput);
+      row.appendChild(meta);
+      row.appendChild(delBtn);
+      el.libraryList.appendChild(row);
+    });
+    updateIdentifyAvailability();
+  }
+
+  function nextId() {
+    return "song_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function addSong(name, audioBuffer) {
+    var fp;
+    try {
+      fp = fingerprintAudioBuffer(audioBuffer);
+    } catch (err) {
+      showStatus("Couldn't analyze that audio (" + (err.message || err) + ").", "error");
+      return;
+    }
+    if (fp.hashes.length === 0) {
+      showStatus("Couldn't find enough distinctive audio in that clip — try something longer or louder.", "error");
+      return;
+    }
+    var song = {
+      id: nextId(),
+      name: (name || "").trim() || ("Track " + (library.length + 1)),
+      durationSec: audioBuffer.duration,
+      hashes: fp.hashes,
+      peakCount: fp.peaks.length
+    };
+    library.push(song);
+    rebuildIndex();
+    renderLibrary();
+
+    el.enrollPreview.hidden = false;
+    drawConstellation(el.enrollConstellation, fp.peaks, fp.numFrames, fp.numBins);
+    el.enrollPreviewMeta.textContent =
+      fp.peaks.length + " peaks -> " + fp.hashes.length + " fingerprint hashes over " + formatTime(audioBuffer.duration);
+
+    el.songNameInput.value = "";
+    showStatus("Added “" + song.name + "” — " + fp.hashes.length + " fingerprints.", "success");
+  }
+
+  // --- Enroll: file upload -------------------------------------------------
+  el.uploadBtn.addEventListener("click", function () { el.fileInput.click(); });
+  el.fileInput.addEventListener("change", function () {
+    var file = el.fileInput.files[0];
+    el.fileInput.value = "";
+    if (!file) return;
+    showStatus("Decoding “" + file.name + "”…", "info");
+    var ctx = getAudioContext();
+    file.arrayBuffer()
+      .then(function (buf) { return ctx.decodeAudioData(buf); })
+      .then(function (audioBuffer) {
+        var name = el.songNameInput.value.trim() || file.name.replace(/\.[a-z0-9]+$/i, "");
+        addSong(name, audioBuffer);
+      })
+      .catch(function (err) {
+        showStatus("Couldn't decode that file (" + (err.message || err) + "). Try a different audio file.", "error");
+      });
+  });
+
+  // --- Enroll: record from mic ---------------------------------------------
+  el.recordEnrollBtn.addEventListener("click", function () {
+    var ctx = getAudioContext();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { handleMicError(null); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      var source = ctx.createMediaStreamSource(stream);
+      var analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      var dataArray = new Uint8Array(analyser.frequencyBinCount);
+      var rec = startRecording(stream);
+
+      el.recordEnrollBtn.disabled = true;
+      el.uploadBtn.disabled = true;
+      el.enrollCaptureRow.hidden = false;
+      el.enrollPreview.hidden = true;
+
+      var running = true;
+      var startTime = performance.now();
+      function tick() {
+        if (!running) return;
+        el.enrollTimer.textContent = formatTime((performance.now() - startTime) / 1000);
+        analyser.getByteFrequencyData(dataArray);
+        drawLiveSpectrum(el.enrollLiveCanvas, dataArray);
+        el.enrollLevelFill.style.width = Math.round(computeLevel(dataArray) * 100) + "%";
+        requestAnimationFrame(tick);
+      }
+      tick();
+
+      el.stopEnrollBtn.onclick = function () {
+        running = false;
+        rec.recorder.stop();
+        rec.stopped.then(function (blob) {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          el.enrollCaptureRow.hidden = true;
+          el.recordEnrollBtn.disabled = false;
+          el.uploadBtn.disabled = false;
+          showStatus("Processing recording…", "info");
+          return blob.arrayBuffer();
+        }).then(function (arrayBuffer) {
+          return ctx.decodeAudioData(arrayBuffer);
+        }).then(function (audioBuffer) {
+          addSong(el.songNameInput.value, audioBuffer);
+        }).catch(function (err) {
+          showStatus("Couldn't process that recording (" + (err.message || err) + ").", "error");
+        });
+      };
+    }).catch(function (err) {
+      handleMicError(err);
+    });
+  });
+
+  // --- Identify: listen -----------------------------------------------------
+  function renderIdentifyResult(matchInfo) {
+    el.identifyResult.hidden = false;
+    if (!matchInfo.best) {
+      el.identifyResult.className = "result result-none";
+      el.identifyResult.innerHTML = "";
+      var title = document.createElement("p");
+      title.className = "result-title";
+      title.textContent = "No match found";
+      var sub = document.createElement("p");
+      sub.className = "result-sub";
+      sub.textContent = "None of your " + library.length + " enrolled track" + (library.length === 1 ? "" : "s") + " matched this capture closely enough.";
+      el.identifyResult.appendChild(title);
+      el.identifyResult.appendChild(sub);
+      return;
+    }
+    var song = library.find(function (s) { return s.id === matchInfo.best.songId; });
+    var confidence = Math.round(Math.min(1, matchInfo.best.coherence) * 100);
+
+    el.identifyResult.className = "result result-match";
+    el.identifyResult.innerHTML = "";
+    var t2 = document.createElement("p");
+    t2.className = "result-title";
+    t2.textContent = "Match: " + (song ? song.name : "Unknown track");
+    var bar = document.createElement("div");
+    bar.className = "confidence-bar";
+    var fill = document.createElement("div");
+    fill.className = "confidence-fill";
+    fill.style.width = confidence + "%";
+    bar.appendChild(fill);
+    var s2 = document.createElement("p");
+    s2.className = "result-sub";
+    s2.textContent = confidence + "% time-aligned · " + matchInfo.best.peakCount + " matching fingerprint pairs";
+    el.identifyResult.appendChild(t2);
+    el.identifyResult.appendChild(bar);
+    el.identifyResult.appendChild(s2);
+  }
+
+  el.listenBtn.addEventListener("click", function () {
+    if (library.length === 0) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { handleMicError(null); return; }
+    var ctx = getAudioContext();
+
+    el.identifyResult.hidden = true;
+    el.identifyPreview.hidden = true;
+    el.listenBtn.disabled = true;
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      var source = ctx.createMediaStreamSource(stream);
+      var analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      var dataArray = new Uint8Array(analyser.frequencyBinCount);
+      var rec = startRecording(stream);
+
+      el.identifyCaptureRow.hidden = false;
+      var duration = CONFIG.identifyDurationSec;
+      var startTime = performance.now();
+      var running = true;
+
+      function tick() {
+        if (!running) return;
+        var elapsed = (performance.now() - startTime) / 1000;
+        el.identifyTimer.textContent = formatTime(duration - elapsed);
+        analyser.getByteFrequencyData(dataArray);
+        drawLiveSpectrum(el.identifyLiveCanvas, dataArray);
+        el.identifyLevelFill.style.width = Math.round(computeLevel(dataArray) * 100) + "%";
+        if (elapsed < duration) requestAnimationFrame(tick);
+      }
+      tick();
+
+      setTimeout(function () {
+        running = false;
+        rec.recorder.stop();
+        rec.stopped.then(function (blob) {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          el.identifyCaptureRow.hidden = true;
+          showStatus("Analyzing capture…", "info");
+          return blob.arrayBuffer();
+        }).then(function (arrayBuffer) {
+          return ctx.decodeAudioData(arrayBuffer);
+        }).then(function (audioBuffer) {
+          var fp = fingerprintAudioBuffer(audioBuffer);
+          el.identifyPreview.hidden = false;
+          drawConstellation(el.identifyConstellation, fp.peaks, fp.numFrames, fp.numBins);
+          var matchInfo = matchQuery(fp);
+          renderIdentifyResult(matchInfo);
+          el.statusBar.hidden = true;
+        }).catch(function (err) {
+          showStatus("Couldn't process that capture (" + (err.message || err) + ").", "error");
+        }).then(function () {
+          el.listenBtn.disabled = library.length === 0;
+        });
+      }, duration * 1000);
+    }).catch(function (err) {
+      handleMicError(err);
+      el.listenBtn.disabled = library.length === 0;
+    });
+  });
+
+  // Initial state
+  renderLibrary();
+})();
+</script>
+</body>
+</html>
