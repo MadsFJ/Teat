@@ -25,9 +25,10 @@ publikum hvis genvejen bruges til en fest.
 2. Tryk **+** øverst for at oprette en ny genvej.
 3. Tryk på navnet øverst og kald den **"Disco-lommelygte"**.
 4. Tryk **Tilføj handling** og søg efter **"lommelygte"** (engelsk:
-   *flashlight*). Vælg handlingen der hedder noget i retning af
-   **"Indstil lommelygte"** (engelsk: *Set Flashlight*) — den bruges
-   flere gange nedenfor.
+   *flashlight*). Der dukker to handlinger op med samme navn **"Indstil
+   lommelygte"** — vælg den med det **blå lommelygte-ikon** (den anden,
+   med et sort/ovalt ikon, er en Control Center-kontrol og virker ikke
+   på samme måde her). Den blå bruges flere gange nedenfor.
 5. Tilføj først handlingen **"Vælg fra menu"** (*Choose from Menu*), og
    rediger menuen så den har disse tre punkter (tryk **Tilføj punkt**
    for hvert nyt):
@@ -65,13 +66,13 @@ Gentag **40 gange**, med dette indeni:
 
 Gentag **200 gange**, med dette indeni:
 
-1. Tilføj handlingen **"Tilfældigt tal"** (*Random Number*) → mellem
+1. Tilføj handlingen **"Vilkårligt tal"** (*Random Number*) → mellem
    **0,05** og **0,3**. Dette indsætter et tilfældigt tal som output.
 2. Indstil lommelygte → **Til**
 3. Vent → sæt feltet til det tilfældige tal fra trin 1 (tryk i feltet og
-   vælg variablen "Tilfældigt tal" fra menuen der popper op i stedet for
+   vælg variablen "Vilkårligt tal" fra menuen der popper op i stedet for
    at skrive et tal).
-4. Tilføj endnu et **"Tilfældigt tal"**, mellem **0,05** og **0,2**.
+4. Tilføj endnu et **"Vilkårligt tal"**, mellem **0,05** og **0,2**.
 5. Indstil lommelygte → **Fra**
 6. Vent → variablen fra trin 4.
 
