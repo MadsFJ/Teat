@@ -35,3 +35,9 @@ er tilgængeligt eller pladen er svær at læse.
 ## `index.html` — Lyt
 
 Browserbaseret lyd-/musikgenkendelse (uafhængig af Pladelog).
+
+## `disco-lommelygte.md` — Disco-lommelygte
+
+Guide til at bygge en Apple Genvej, der får den rigtige LED-blitz på
+iPhone til at blinke i diskotek-mønstre. Ikke en webapp — iOS tillader
+ikke browsere at styre lommelygten, så løsningen er en Genvej i stedet.
