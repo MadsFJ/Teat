@@ -66,15 +66,23 @@ Gentag **40 gange**, med dette indeni:
 
 Gentag **200 gange**, med dette indeni:
 
+> **Bemærk:** "Vilkårligt tal mellem" giver kun **hele tal**, selvom
+> taltastaturet viser et komma (det er bare det generiske taltastatur,
+> som appen bruger overalt). Brug derfor hele tal og del med 100 bagefter
+> med **"Beregn"** (*Calculate*), så du får et decimaltal til Vent.
+
 1. Tilføj handlingen **"Vilkårligt tal"** (*Random Number*) → mellem
-   **0,05** og **0,3**. Dette indsætter et tilfældigt tal som output.
-2. Indstil lommelygte → **Til**
-3. Vent → sæt feltet til det tilfældige tal fra trin 1 (tryk i feltet og
-   vælg variablen "Vilkårligt tal" fra menuen der popper op i stedet for
-   at skrive et tal).
-4. Tilføj endnu et **"Vilkårligt tal"**, mellem **0,05** og **0,2**.
-5. Indstil lommelygte → **Fra**
-6. Vent → variablen fra trin 4.
+   **5** og **30**.
+2. Tilføj handlingen **"Beregn"** (*Calculate*) → sæt den til **÷**
+   (divider), med variablen "Vilkårligt tal" som første tal og **100**
+   som andet. Resultatet bliver et tal mellem 0,05 og 0,30.
+3. Indstil lommelygte → **Til**
+4. Vent → tryk i feltet og vælg variablen **"Beregnet resultat"** (fra
+   trin 2) i stedet for at skrive et tal.
+5. Tilføj endnu et **"Vilkårligt tal"**, mellem **5** og **20**, og endnu
+   et **"Beregn"** (÷ 100) på samme måde.
+6. Indstil lommelygte → **Fra**
+7. Vent → det andet "Beregnet resultat" (fra trin 5).
 
 Dette giver et uregelmæssigt, mere "disco-agtigt" blink end den faste
 strobe, fordi tempoet varierer fra blink til blink.
