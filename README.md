@@ -1,7 +1,27 @@
 # Teat
 
-Samling af små, selvstændige webapps — hver er én HTML-fil uden build-trin,
-klar til GitHub Pages.
+Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
+mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
+
+## `dart501/` — NUKE 501 Dart Arena
+
+Moderne, neon dark-mode 501-dartapp inspireret af den energiske
+"Nuke"-stil fra topmoderne dart-shows. Indeholder:
+
+- klassisk 501 (Double Out / Straight Out) med intelligent
+  checkout-guide, live statistik og en lokal 2-spiller- eller
+  CPU-modstander (tre sværhedsgrader),
+- fulde-skærms neon-bannere og lydeffekter ved 180'ere, høje
+  checkouts og leg-/kampsejre,
+- tre træningsmoduler: Around the Clock, Double Training og
+  Scoring Drill,
+- kamphistorik og personlige trænings-rekorder gemt i browserens
+  `localStorage`.
+
+Se [`dart501/README.md`](dart501/README.md) for detaljer om
+projektstruktur og hvordan den er bygget. Kør den lokalt med fx
+`python3 -m http.server 8080` fra `dart501/`-mappen (kræver en
+http-server pga. ES-moduler — kan ikke åbnes direkte som `file://`).
 
 ## `pladelog.html` — Pladelog
 
