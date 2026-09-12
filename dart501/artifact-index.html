@@ -1,0 +1,227 @@
+<title>NUKE 501</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+
+<div id="big-banner" class="big-banner"></div>
+
+<header class="topbar">
+  <div class="brand">⚡ NUKE <span>501</span></div>
+  <nav class="topnav">
+    <button class="nav-btn" data-view="home">Hjem</button>
+    <button class="nav-btn" data-view="setup501">Spil 501</button>
+    <button class="nav-btn" data-view="training-menu">Træning</button>
+    <button class="nav-btn" data-view="stats">Statistik</button>
+    <button class="nav-btn" data-view="settings">⚙</button>
+  </nav>
+</header>
+
+<main class="app-main">
+
+  <!-- HOME -->
+  <section class="view" id="view-home">
+    <div class="hero">
+      <h1>⚡ NUKE <span class="accent">501</span> ⚡</h1>
+      <p class="tagline">Fuld gas, skarpe checkouts, høje 180'ere. THE NUKE STYLE.</p>
+    </div>
+    <div class="home-grid">
+      <button class="home-card" data-nav="setup501">
+        <span class="home-card-icon">🎯</span>
+        <span class="home-card-title">Spil 501</span>
+        <span class="home-card-desc">2 spillere eller mod CPU. Double eller Straight Out.</span>
+      </button>
+      <button class="home-card" data-nav="training-menu">
+        <span class="home-card-icon">🏋️</span>
+        <span class="home-card-title">Træning</span>
+        <span class="home-card-desc">Around the Clock, Double Training, Scoring Drill.</span>
+      </button>
+      <button class="home-card" data-nav="stats">
+        <span class="home-card-icon">📊</span>
+        <span class="home-card-title">Statistik</span>
+        <span class="home-card-desc">Kamphistorik, snit og personlige rekorder.</span>
+      </button>
+      <button class="home-card" data-nav="settings">
+        <span class="home-card-icon">⚙️</span>
+        <span class="home-card-title">Indstillinger</span>
+        <span class="home-card-desc">Lyd til/fra, ryd gemt data.</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- SETUP 501 -->
+  <section class="view" id="view-setup501" hidden>
+    <h2>Ny 501-kamp</h2>
+    <form id="setup501-form" class="panel form-panel">
+      <label class="field">
+        <span>Spiller 1 navn</span>
+        <input type="text" id="setup-p1-name" placeholder="Spiller 1" />
+      </label>
+
+      <label class="field checkbox-field">
+        <input type="checkbox" id="setup-vs-ai" />
+        <span>Spil mod CPU</span>
+      </label>
+
+      <div class="field" id="setup-p2-name-field">
+        <label>
+          <span>Spiller 2 navn</span>
+          <input type="text" id="setup-p2-name" placeholder="Spiller 2" />
+        </label>
+      </div>
+
+      <div class="field" id="setup-ai-difficulty-field" hidden>
+        <label>
+          <span>CPU-sværhedsgrad</span>
+          <select id="setup-ai-difficulty">
+            <option value="easy">Let</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Svær</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Startscore</span>
+        <select id="setup-start-score">
+          <option value="301">301</option>
+          <option value="501" selected>501</option>
+          <option value="701">701</option>
+        </select>
+      </label>
+
+      <label class="field checkbox-field">
+        <input type="checkbox" id="setup-double-out" checked />
+        <span>Double Out (kræver dobbelt for at lukke)</span>
+      </label>
+
+      <label class="field">
+        <span>Først til antal legs</span>
+        <input type="number" id="setup-legs-to-win" value="3" min="1" max="21" />
+      </label>
+
+      <button type="submit" class="btn-primary btn-big">START KAMP 🎯</button>
+    </form>
+  </section>
+
+  <!-- GAME 501 -->
+  <section class="view" id="view-game501" hidden>
+    <div id="p501-leg-info" class="leg-info"></div>
+    <div id="p501-players" class="player-cards"></div>
+    <div id="p501-checkout" class="checkout-box" hidden></div>
+    <div id="p501-keypad" class="keypad-container"></div>
+    <button id="p501-quit" class="btn-secondary">✕ Afslut kamp</button>
+  </section>
+
+  <!-- TRAINING MENU -->
+  <section class="view" id="view-training-menu" hidden>
+    <h2>Træningsmoduler</h2>
+    <div class="home-grid">
+      <button class="home-card" data-nav="training-clock">
+        <span class="home-card-icon">🕐</span>
+        <span class="home-card-title">Around the Clock</span>
+        <span class="home-card-desc">Ram 1-20 og bull i rækkefølge.</span>
+      </button>
+      <button class="home-card" data-nav="training-double">
+        <span class="home-card-icon">🎯</span>
+        <span class="home-card-title">Double Training</span>
+        <span class="home-card-desc">Fokusér på at lukke ud på udvalgte doubler.</span>
+      </button>
+      <button class="home-card" data-nav="training-scoring">
+        <span class="home-card-icon">🔥</span>
+        <span class="home-card-title">Scoring Drill</span>
+        <span class="home-card-desc">10 omgange, maksimér din score (T20!).</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- TRAINING: AROUND THE CLOCK -->
+  <section class="view" id="view-training-clock" hidden>
+    <h2>🕐 Around the Clock</h2>
+    <p class="hint">Ram 1, 2, 3 … 20 og til sidst BULL, i rækkefølge. Enhver ring (S/D/T) tæller.</p>
+    <div class="panel">
+      <div id="clock-best" class="best-line"></div>
+      <div id="clock-target" class="big-target"></div>
+      <div id="clock-darts" class="sub-line"></div>
+      <div id="clock-progress" class="clock-progress"></div>
+      <div id="clock-keypad" class="keypad-container"></div>
+      <button id="clock-restart" class="btn-secondary">↻ Start forfra</button>
+    </div>
+  </section>
+
+  <!-- TRAINING: DOUBLE TRAINING -->
+  <section class="view" id="view-training-double" hidden>
+    <h2>🎯 Double Training</h2>
+    <p class="hint">Standard: D20, D16, D10, D8, D4 — 5 forsøg pr. double. Skriv dine egne tal, kommasepareret.</p>
+    <div class="panel">
+      <label class="field">
+        <span>Doubler (fx 20,16,10,8,4)</span>
+        <input type="text" id="double-targets-input" placeholder="20,16,10,8,4" />
+      </label>
+      <button id="double-start" class="btn-primary">Start session</button>
+      <div id="double-best" class="best-line"></div>
+      <div id="double-play-area" hidden>
+        <div id="double-current-target" class="big-target"></div>
+        <div id="double-attempts-left" class="sub-line"></div>
+        <div id="double-keypad" class="keypad-container"></div>
+        <table class="data-table">
+          <thead><tr><th>Double</th><th>Ramt/Forsøg</th><th>%</th></tr></thead>
+          <tbody id="double-results"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAINING: SCORING DRILL -->
+  <section class="view" id="view-training-scoring" hidden>
+    <h2>🔥 Scoring Drill</h2>
+    <p class="hint">10 omgange á 3 pile. Saml så mange point som muligt — sigt efter T20!</p>
+    <div class="panel">
+      <div id="scoring-best" class="best-line"></div>
+      <div id="scoring-round" class="sub-line"></div>
+      <div id="scoring-total" class="big-target"></div>
+      <div id="scoring-turn-darts" class="turn-darts"></div>
+      <div id="scoring-keypad" class="keypad-container"></div>
+      <table class="data-table">
+        <thead><tr><th>Omgang</th><th>Kast</th><th>Point</th></tr></thead>
+        <tbody id="scoring-history"></tbody>
+      </table>
+      <button id="scoring-restart" class="btn-secondary">↻ Start forfra</button>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="view" id="view-stats" hidden>
+    <h2>📊 Statistik</h2>
+    <h3>Trænings-rekorder</h3>
+    <div id="stats-training-list" class="best-grid"></div>
+    <h3>Kamphistorik</h3>
+    <p id="stats-empty" class="hint">Ingen kampe spillet endnu — gå spil en 501-kamp!</p>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>Dato</th><th>Type</th><th>Resultat</th><th>Vinder</th></tr></thead>
+        <tbody id="stats-match-table"></tbody>
+      </table>
+    </div>
+    <button id="stats-clear" class="btn-secondary">🗑 Ryd kamphistorik</button>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="view-settings" hidden>
+    <h2>⚙️ Indstillinger</h2>
+    <div class="panel">
+      <label class="field checkbox-field">
+        <input type="checkbox" id="settings-sound" />
+        <span>Lydeffekter</span>
+      </label>
+      <button id="settings-clear-all" class="btn-secondary">🗑 Slet alt gemt data</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>Bygget med ⚡ og masser af 180'ere · Ren HTML/CSS/JS.</p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
