@@ -68,9 +68,11 @@ rundt i stuen. Indeholder:
 - kan valgfrit forbindes til dit eget Firebase Firestore-projekt
   (indstilles under ⚙ Firebase-opsætning), så en anden enhed kan åbne
   "👀 Live-visning" og se det ord der bliver trukket lige nu, i realtid.
-  Konfigurationen gemmes kun i din egen browser og committes aldrig til
-  dette repo — uden den fungerer spillet helt normalt, bare uden
-  live-visning.
+  Kræver login med Firebase Authentication (email/adgangskode) —
+  kombineret med Firestore-regler der kun tillader din egen konto,
+  er det kun dig der kan læse eller skrive data. Konfigurationen
+  gemmes kun i din egen browser og committes aldrig til dette repo —
+  uden den fungerer spillet helt normalt, bare uden live-visning.
 
 ## `index.html` — Lyt
 

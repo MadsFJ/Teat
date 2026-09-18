@@ -320,6 +320,9 @@
     resize:vertical;
   }
   .hint{ font-size:13px; color:var(--text-muted); line-height:1.6; text-align:left; }
+  .text-input{ min-height:auto; }
+  .auth-section{ display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:16px; }
+  .auth-section[hidden]{ display:none; }
   .status-pill{
     font-family:var(--font-display);
     font-size:12px;
@@ -431,6 +434,16 @@
     </div>
     <p class="hint">Indsæt "Web app"-konfigurationen fra dit eget Firebase-projekt (Project settings → General → Your apps), og opret en Firestore-database i projektet. Konfigurationen gemmes kun i din egen browser og committes aldrig til dette repo. Uden dette virker spillet helt normalt, bare uden live-visning.</p>
     <button type="button" class="btn btn-primary" id="saveSettingsBtn">Gem</button>
+
+    <div class="auth-section" id="authSection" hidden>
+      <label for="authEmail" style="font-family:var(--font-display); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted);">Log ind (kun din konto får adgang)</label>
+      <input type="email" id="authEmail" class="config-input text-input" placeholder="din@email.dk" autocomplete="username">
+      <input type="password" id="authPassword" class="config-input text-input" placeholder="Adgangskode" autocomplete="current-password">
+      <button type="button" class="btn btn-secondary" id="signInBtn">Log ind</button>
+      <button type="button" class="btn btn-ghost" id="signOutBtn" hidden>Log ud</button>
+      <p class="hint" id="authStatusText"></p>
+    </div>
+
     <button type="button" class="btn btn-ghost" id="settingsBackBtn">Tilbage</button>
   </section>
 
@@ -529,6 +542,7 @@
     timerInterval: null,
     settings: loadSettings(),
     fb: null,
+    fbUser: null,
     liveUnsub: null,
     liveTickInterval: null,
     liveUpdatedAtMs: null
@@ -541,7 +555,8 @@
     "gameCatBadge", "wordProgress", "timerDisplay", "timerToggleBtn", "timerResetBtn",
     "wordCard", "nextWordBtn", "changeCategoryBtn", "quitBtn", "flashOverlay",
     "openSettingsBtn", "openLiveBtn", "fbStatusPill", "fbConfigInput", "saveSettingsBtn", "settingsBackBtn",
-    "liveContent", "liveBackBtn"
+    "liveContent", "liveBackBtn",
+    "authSection", "authEmail", "authPassword", "signInBtn", "signOutBtn", "authStatusText"
   ].forEach(function (id) { el[id] = document.getElementById(id); });
 
   var SCREEN_IDS = ["screenStart", "screenCategory", "screenGame", "screenSettings", "screenLive"];
@@ -634,6 +649,23 @@
     state.settings.firebaseConfig = val;
     persistSettings();
     initFirebase().then(renderFbStatus);
+  });
+
+  el.signInBtn.addEventListener("click", function () {
+    if (!state.fb) return;
+    var email = el.authEmail.value.trim();
+    var password = el.authPassword.value;
+    if (!email || !password) { window.alert("Udfyld både email og adgangskode."); return; }
+    el.signInBtn.disabled = true;
+    state.fb.signIn(state.fb.auth, email, password).catch(function (e) {
+      window.alert("Kunne ikke logge ind: " + (e && e.message ? e.message : "ukendt fejl"));
+    }).then(function () {
+      el.signInBtn.disabled = false;
+    });
+  });
+  el.signOutBtn.addEventListener("click", function () {
+    if (!state.fb) return;
+    state.fb.signOut(state.fb.auth).catch(function () {});
   });
 
   el.openLiveBtn.addEventListener("click", function () {
@@ -785,15 +817,26 @@
 
   // ---------- Firebase (valgfrit) ----------
   function renderFbStatus() {
-    if (state.fb) {
-      el.fbStatusPill.textContent = "● Forbundet";
+    el.authSection.hidden = !state.fb;
+    if (!state.fb) {
+      el.fbStatusPill.textContent = (state.settings.firebaseConfig || "").trim()
+        ? "● Kunne ikke forbinde — tjek konfigurationen"
+        : "● Ikke forbundet";
+      el.fbStatusPill.className = "status-pill";
+      return;
+    }
+    if (state.fbUser) {
+      el.fbStatusPill.textContent = "● Forbundet og logget ind";
       el.fbStatusPill.className = "status-pill ok";
-    } else if ((state.settings.firebaseConfig || "").trim()) {
-      el.fbStatusPill.textContent = "● Kunne ikke forbinde — tjek konfigurationen";
-      el.fbStatusPill.className = "status-pill";
+      el.signInBtn.hidden = true;
+      el.signOutBtn.hidden = false;
+      el.authStatusText.textContent = "Logget ind som " + state.fbUser.email + ". Live-sync er aktiv på denne enhed.";
     } else {
-      el.fbStatusPill.textContent = "● Ikke forbundet";
+      el.fbStatusPill.textContent = "● Forbundet — log ind for at aktivere live-sync";
       el.fbStatusPill.className = "status-pill";
+      el.signInBtn.hidden = false;
+      el.signOutBtn.hidden = true;
+      el.authStatusText.textContent = "Log ind med din egen konto for at kunne skrive og se det aktive ord — uden login kan ingen andre læse eller skrive data.";
     }
   }
 
@@ -802,18 +845,28 @@
     if (!cfgRaw) { state.fb = null; return Promise.resolve(); }
     return Promise.all([
       import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js")
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"),
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js")
     ]).then(function (mods) {
       var cfg = JSON.parse(cfgRaw);
       var app = mods[0].initializeApp(cfg);
       var fs = mods[1];
+      var authMod = mods[2];
+      var auth = authMod.getAuth(app);
       state.fb = {
         db: fs.getFirestore(app),
         doc: fs.doc,
         setDoc: fs.setDoc,
         onSnapshot: fs.onSnapshot,
-        serverTimestamp: fs.serverTimestamp
+        serverTimestamp: fs.serverTimestamp,
+        auth: auth,
+        signIn: authMod.signInWithEmailAndPassword,
+        signOut: authMod.signOut
       };
+      authMod.onAuthStateChanged(auth, function (user) {
+        state.fbUser = user;
+        renderFbStatus();
+      });
     }).catch(function (e) {
       console.warn("Firebase kunne ikke initialiseres", e);
       state.fb = null;
@@ -825,7 +878,7 @@
   }
 
   function writeLiveWord(word, catKey, catName) {
-    if (!state.fb) return;
+    if (!state.fb || !state.fbUser) return;
     state.fb.setDoc(liveDocRef(), {
       ord: word,
       kategori: catKey,
@@ -836,7 +889,7 @@
   }
 
   function clearLiveWord() {
-    if (!state.fb) return;
+    if (!state.fb || !state.fbUser) return;
     state.fb.setDoc(liveDocRef(), {
       ord: null,
       kategori: null,
@@ -871,6 +924,10 @@
   function startLiveListener() {
     if (!state.fb) {
       el.liveContent.innerHTML = '<p class="lede">Firebase er ikke sat op endnu. Gå til "⚙ Firebase-opsætning" på startskærmen og indsæt din konfiguration.</p>';
+      return;
+    }
+    if (!state.fbUser) {
+      el.liveContent.innerHTML = '<p class="lede">Log ind under "⚙ Firebase-opsætning" for at se live-visningen — kun din egen konto har adgang.</p>';
       return;
     }
     el.liveContent.innerHTML = '<p class="lede">Henter live-status…</p>';
