@@ -293,6 +293,63 @@
     .cat-grid{ grid-template-columns:1fr 1fr; }
     .timer-display{ font-size:44px; }
   }
+
+  /* ---------- start screen links ---------- */
+  .start-links{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+  /* ---------- settings screen ---------- */
+  .settings-screen{ gap:18px; }
+  .field{ display:flex; flex-direction:column; gap:6px; text-align:left; }
+  .field label{
+    font-family:var(--font-display);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+  }
+  .config-input{
+    width:100%;
+    min-height:140px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px;
+    font-family:var(--font-display);
+    font-size:13px;
+    background:var(--surface);
+    color:var(--text);
+    resize:vertical;
+  }
+  .hint{ font-size:13px; color:var(--text-muted); line-height:1.6; text-align:left; }
+  .text-input{ min-height:auto; }
+  .auth-section{ display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:16px; }
+  .auth-section[hidden]{ display:none; }
+  .status-pill{
+    font-family:var(--font-display);
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    display:inline-flex;
+    align-self:flex-start;
+    gap:6px;
+    align-items:center;
+    color:var(--text-muted);
+  }
+  .status-pill.ok{ border-color:var(--accent-2); color:var(--accent-2); }
+
+  /* ---------- live screen ---------- */
+  .live-screen{ align-items:center; text-align:center; justify-content:center; }
+  .live-screen .cat-header h2{ display:flex; align-items:center; justify-content:center; gap:8px; }
+  .live-word{ font-family:var(--font-display); font-weight:700; font-size:clamp(30px, 9vw, 44px); margin-top:16px; }
+  .live-meta{ color:var(--text-muted); font-size:13px; margin-top:10px; font-family:var(--font-display); }
+  .live-dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--accent-2);
+    display:inline-block;
+    animation:live-pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes live-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+  @media (prefers-reduced-motion:reduce){ .live-dot{ animation:none; } }
 </style>
 </head>
 <body>
@@ -310,6 +367,10 @@
       <p class="lede">Send telefonen rundt, vælg en kategori, og gæt så meget som muligt inden tiden løber ud.</p>
     </div>
     <button type="button" class="btn btn-primary" id="startBtn">Start spil</button>
+    <div class="start-links">
+      <button type="button" class="btn btn-ghost" id="openSettingsBtn">⚙ Firebase-opsætning</button>
+      <button type="button" class="btn btn-ghost" id="openLiveBtn">👀 Live-visning</button>
+    </div>
   </section>
 
   <!-- CATEGORY SCREEN -->
@@ -358,6 +419,44 @@
       <button type="button" class="btn btn-ghost" id="changeCategoryBtn">Skift kategori</button>
       <button type="button" class="btn btn-ghost" id="quitBtn">Afslut spil</button>
     </div>
+  </section>
+
+  <!-- SETTINGS SCREEN -->
+  <section class="screen settings-screen" id="screenSettings">
+    <div class="cat-header">
+      <h2>Firebase-opsætning</h2>
+      <p>Valgfrit: forbind dit eget Firebase-projekt for at se det aktive ord live på en anden enhed.</p>
+    </div>
+    <span class="status-pill" id="fbStatusPill">● Ikke forbundet</span>
+    <div class="field">
+      <label for="fbConfigInput">Firebase web-konfiguration (JSON)</label>
+      <textarea class="config-input" id="fbConfigInput" spellcheck="false" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea>
+    </div>
+    <p class="hint">Indsæt "Web app"-konfigurationen fra dit eget Firebase-projekt (Project settings → General → Your apps), og opret en Firestore-database i projektet. Konfigurationen gemmes kun i din egen browser og committes aldrig til dette repo. Uden dette virker spillet helt normalt, bare uden live-visning.</p>
+    <button type="button" class="btn btn-primary" id="saveSettingsBtn">Gem</button>
+
+    <div class="auth-section" id="authSection" hidden>
+      <label for="authEmail" style="font-family:var(--font-display); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted);">Log ind (kun din konto får adgang)</label>
+      <input type="email" id="authEmail" class="config-input text-input" placeholder="din@email.dk" autocomplete="username">
+      <input type="password" id="authPassword" class="config-input text-input" placeholder="Adgangskode" autocomplete="current-password">
+      <button type="button" class="btn btn-secondary" id="signInBtn">Log ind</button>
+      <button type="button" class="btn btn-ghost" id="signOutBtn" hidden>Log ud</button>
+      <p class="hint" id="authStatusText"></p>
+    </div>
+
+    <button type="button" class="btn btn-ghost" id="settingsBackBtn">Tilbage</button>
+  </section>
+
+  <!-- LIVE SCREEN -->
+  <section class="screen live-screen" id="screenLive">
+    <div class="cat-header">
+      <h2><span class="live-dot" aria-hidden="true"></span> Live-visning</h2>
+      <p>Viser det ord der bliver trukket lige nu på den anden enhed.</p>
+    </div>
+    <div id="liveContent">
+      <p class="lede">Venter på et aktivt ord…</p>
+    </div>
+    <button type="button" class="btn btn-ghost" id="liveBackBtn">Tilbage</button>
   </section>
 
 </div>
@@ -421,6 +520,17 @@
 
   var CATEGORY_ORDER = ["blandet", "dyr", "film", "mad", "sjove", "svaere"];
 
+  var SETTINGS_KEY = "tegnOgGaetSettings";
+
+  function loadSettings() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function persistSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); }
+    catch (e) { /* localStorage utilgængeligt, fx i privat browsing */ }
+  }
+
   var state = {
     categoryKey: null,
     timerSeconds: 60,
@@ -429,19 +539,30 @@
     currentWord: null,
     timeLeft: 60,
     timerRunning: false,
-    timerInterval: null
+    timerInterval: null,
+    settings: loadSettings(),
+    fb: null,
+    fbUser: null,
+    liveUnsub: null,
+    liveTickInterval: null,
+    liveUpdatedAtMs: null
   };
 
   var el = {};
   [
-    "screenStart", "screenCategory", "screenGame",
+    "screenStart", "screenCategory", "screenGame", "screenSettings", "screenLive",
     "startBtn", "catGrid", "timerPicker", "beginRoundBtn", "backToStartBtn",
     "gameCatBadge", "wordProgress", "timerDisplay", "timerToggleBtn", "timerResetBtn",
-    "wordCard", "nextWordBtn", "changeCategoryBtn", "quitBtn", "flashOverlay"
+    "wordCard", "nextWordBtn", "changeCategoryBtn", "quitBtn", "flashOverlay",
+    "openSettingsBtn", "openLiveBtn", "fbStatusPill", "fbConfigInput", "saveSettingsBtn", "settingsBackBtn",
+    "liveContent", "liveBackBtn",
+    "authSection", "authEmail", "authPassword", "signInBtn", "signOutBtn", "authStatusText"
   ].forEach(function (id) { el[id] = document.getElementById(id); });
 
+  var SCREEN_IDS = ["screenStart", "screenCategory", "screenGame", "screenSettings", "screenLive"];
+
   function showScreen(id) {
-    ["screenStart", "screenCategory", "screenGame"].forEach(function (s) {
+    SCREEN_IDS.forEach(function (s) {
       document.getElementById(s).classList.toggle("active", s === id);
     });
   }
@@ -502,10 +623,57 @@
 
   el.changeCategoryBtn.addEventListener("click", function () {
     stopTimer();
+    clearLiveWord();
     showScreen("screenCategory");
   });
   el.quitBtn.addEventListener("click", function () {
     stopTimer();
+    clearLiveWord();
+    showScreen("screenStart");
+  });
+
+  el.openSettingsBtn.addEventListener("click", function () {
+    el.fbConfigInput.value = state.settings.firebaseConfig || "";
+    renderFbStatus();
+    showScreen("screenSettings");
+  });
+  el.settingsBackBtn.addEventListener("click", function () {
+    showScreen("screenStart");
+  });
+  el.saveSettingsBtn.addEventListener("click", function () {
+    var val = el.fbConfigInput.value.trim();
+    if (val) {
+      try { JSON.parse(val); }
+      catch (e) { window.alert("Firebase-konfigurationen er ikke gyldig JSON."); return; }
+    }
+    state.settings.firebaseConfig = val;
+    persistSettings();
+    initFirebase().then(renderFbStatus);
+  });
+
+  el.signInBtn.addEventListener("click", function () {
+    if (!state.fb) return;
+    var email = el.authEmail.value.trim();
+    var password = el.authPassword.value;
+    if (!email || !password) { window.alert("Udfyld både email og adgangskode."); return; }
+    el.signInBtn.disabled = true;
+    state.fb.signIn(state.fb.auth, email, password).catch(function (e) {
+      window.alert("Kunne ikke logge ind: " + (e && e.message ? e.message : "ukendt fejl"));
+    }).then(function () {
+      el.signInBtn.disabled = false;
+    });
+  });
+  el.signOutBtn.addEventListener("click", function () {
+    if (!state.fb) return;
+    state.fb.signOut(state.fb.auth).catch(function () {});
+  });
+
+  el.openLiveBtn.addEventListener("click", function () {
+    showScreen("screenLive");
+    startLiveListener();
+  });
+  el.liveBackBtn.addEventListener("click", function () {
+    stopLiveListener();
     showScreen("screenStart");
   });
 
@@ -518,6 +686,7 @@
     el.gameCatBadge.textContent = cat.emoji + " " + cat.name;
     updateProgress();
     resetTimer();
+    clearLiveWord();
     el.wordCard.innerHTML = '<p class="word-placeholder" id="wordPlaceholder">Tryk på "Vis ord" for at trække det første ord.</p>';
     el.nextWordBtn.textContent = "Vis ord";
     el.nextWordBtn.disabled = false;
@@ -541,6 +710,7 @@
       });
       el.nextWordBtn.disabled = true;
       state.currentWord = null;
+      clearLiveWord();
       return;
     }
     state.currentWord = state.deck.pop();
@@ -548,6 +718,7 @@
     el.wordCard.innerHTML = '<p class="word-text">' + escapeHtml(state.currentWord) + "</p>";
     el.nextWordBtn.textContent = "Næste ord";
     updateProgress();
+    writeLiveWord(state.currentWord, state.categoryKey, CATEGORIES[state.categoryKey].name);
   }
 
   function escapeHtml(str) {
@@ -644,8 +815,138 @@
     } catch (e) { /* lyd er ikke kritisk for spillet */ }
   }
 
+  // ---------- Firebase (valgfrit) ----------
+  function renderFbStatus() {
+    el.authSection.hidden = !state.fb;
+    if (!state.fb) {
+      el.fbStatusPill.textContent = (state.settings.firebaseConfig || "").trim()
+        ? "● Kunne ikke forbinde — tjek konfigurationen"
+        : "● Ikke forbundet";
+      el.fbStatusPill.className = "status-pill";
+      return;
+    }
+    if (state.fbUser) {
+      el.fbStatusPill.textContent = "● Forbundet og logget ind";
+      el.fbStatusPill.className = "status-pill ok";
+      el.signInBtn.hidden = true;
+      el.signOutBtn.hidden = false;
+      el.authStatusText.textContent = "Logget ind som " + state.fbUser.email + ". Live-sync er aktiv på denne enhed.";
+    } else {
+      el.fbStatusPill.textContent = "● Forbundet — log ind for at aktivere live-sync";
+      el.fbStatusPill.className = "status-pill";
+      el.signInBtn.hidden = false;
+      el.signOutBtn.hidden = true;
+      el.authStatusText.textContent = "Log ind med din egen konto for at kunne skrive og se det aktive ord — uden login kan ingen andre læse eller skrive data.";
+    }
+  }
+
+  function initFirebase() {
+    var cfgRaw = (state.settings.firebaseConfig || "").trim();
+    if (!cfgRaw) { state.fb = null; return Promise.resolve(); }
+    return Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js"),
+      import("https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js")
+    ]).then(function (mods) {
+      var cfg = JSON.parse(cfgRaw);
+      var app = mods[0].initializeApp(cfg);
+      var fs = mods[1];
+      var authMod = mods[2];
+      var auth = authMod.getAuth(app);
+      state.fb = {
+        db: fs.getFirestore(app),
+        doc: fs.doc,
+        setDoc: fs.setDoc,
+        onSnapshot: fs.onSnapshot,
+        serverTimestamp: fs.serverTimestamp,
+        auth: auth,
+        signIn: authMod.signInWithEmailAndPassword,
+        signOut: authMod.signOut
+      };
+      authMod.onAuthStateChanged(auth, function (user) {
+        state.fbUser = user;
+        renderFbStatus();
+      });
+    }).catch(function (e) {
+      console.warn("Firebase kunne ikke initialiseres", e);
+      state.fb = null;
+    });
+  }
+
+  function liveDocRef() {
+    return state.fb.doc(state.fb.db, "tegnOgGaetLive", "current");
+  }
+
+  function writeLiveWord(word, catKey, catName) {
+    if (!state.fb || !state.fbUser) return;
+    state.fb.setDoc(liveDocRef(), {
+      ord: word,
+      kategori: catKey,
+      kategoriNavn: catName,
+      aktiv: true,
+      opdateret: state.fb.serverTimestamp()
+    }).catch(function () { /* live-sync er ikke kritisk for spillet */ });
+  }
+
+  function clearLiveWord() {
+    if (!state.fb || !state.fbUser) return;
+    state.fb.setDoc(liveDocRef(), {
+      ord: null,
+      kategori: null,
+      kategoriNavn: null,
+      aktiv: false,
+      opdateret: state.fb.serverTimestamp()
+    }).catch(function () { /* live-sync er ikke kritisk for spillet */ });
+  }
+
+  function renderLive(data) {
+    if (!data || !data.aktiv || !data.ord) {
+      state.liveUpdatedAtMs = null;
+      el.liveContent.innerHTML = '<p class="lede">Ingen aktiv runde lige nu.</p>';
+      return;
+    }
+    var cat = CATEGORIES[data.kategori];
+    var badge = (cat ? cat.emoji + " " + cat.name : escapeHtml(data.kategoriNavn || ""));
+    el.liveContent.innerHTML =
+      '<span class="game-cat-badge">' + badge + "</span>" +
+      '<p class="live-word">' + escapeHtml(data.ord) + "</p>" +
+      '<p class="live-meta" id="liveMeta">opdateret lige nu</p>';
+    state.liveUpdatedAtMs = (data.opdateret && data.opdateret.toMillis) ? data.opdateret.toMillis() : Date.now();
+  }
+
+  function tickLiveMeta() {
+    var metaEl = document.getElementById("liveMeta");
+    if (!metaEl || !state.liveUpdatedAtMs) return;
+    var secs = Math.max(0, Math.round((Date.now() - state.liveUpdatedAtMs) / 1000));
+    metaEl.textContent = secs <= 1 ? "opdateret lige nu" : "opdateret for " + secs + " sek. siden";
+  }
+
+  function startLiveListener() {
+    if (!state.fb) {
+      el.liveContent.innerHTML = '<p class="lede">Firebase er ikke sat op endnu. Gå til "⚙ Firebase-opsætning" på startskærmen og indsæt din konfiguration.</p>';
+      return;
+    }
+    if (!state.fbUser) {
+      el.liveContent.innerHTML = '<p class="lede">Log ind under "⚙ Firebase-opsætning" for at se live-visningen — kun din egen konto har adgang.</p>';
+      return;
+    }
+    el.liveContent.innerHTML = '<p class="lede">Henter live-status…</p>';
+    state.liveUnsub = state.fb.onSnapshot(liveDocRef(), function (snap) {
+      renderLive(snap.exists() ? snap.data() : null);
+    }, function () {
+      el.liveContent.innerHTML = '<p class="lede">Kunne ikke forbinde til Firebase. Tjek din konfiguration under "⚙ Firebase-opsætning".</p>';
+    });
+    state.liveTickInterval = setInterval(tickLiveMeta, 1000);
+  }
+
+  function stopLiveListener() {
+    if (state.liveUnsub) { state.liveUnsub(); state.liveUnsub = null; }
+    if (state.liveTickInterval) { clearInterval(state.liveTickInterval); state.liveTickInterval = null; }
+  }
+
   // ---------- init ----------
   buildCategoryGrid();
+  initFirebase();
 })();
 </script>
 </body>

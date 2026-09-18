@@ -64,7 +64,15 @@ rundt i stuen. Indeholder:
 - en nedtælling (30/60/90 sek.) med start/pause-knap samt et rødt
   flash og en lyd/vibration, når tiden løber ud,
 - stort UI med store knapper og læsbar skrift, designet til at blive
-  sendt rundt mellem spillere.
+  sendt rundt mellem spillere,
+- kan valgfrit forbindes til dit eget Firebase Firestore-projekt
+  (indstilles under ⚙ Firebase-opsætning), så en anden enhed kan åbne
+  "👀 Live-visning" og se det ord der bliver trukket lige nu, i realtid.
+  Kræver login med Firebase Authentication (email/adgangskode) —
+  kombineret med Firestore-regler der kun tillader din egen konto,
+  er det kun dig der kan læse eller skrive data. Konfigurationen
+  gemmes kun i din egen browser og committes aldrig til dette repo —
+  uden den fungerer spillet helt normalt, bare uden live-visning.
 
 ## `index.html` — Lyt
 
