@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tegn og gæt</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f4f6f5;
+    --surface:#ffffff;
+    --surface-2:#eaf0ee;
+    --border:#d5deda;
+    --text:#0f1a1a;
+    --text-muted:#546462;
+    --accent:#e8590c;
+    --accent-contrast:#ffffff;
+    --accent-2:#0b8f7c;
+    --danger:#ad2c22;
+    --font-display:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-body:'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0e10;
+      --surface:#11181a;
+      --surface-2:#172023;
+      --border:#263133;
+      --text:#e9f2f0;
+      --text-muted:#8a9a9c;
+      --accent:#ff8a3d;
+      --accent-contrast:#1a0d02;
+      --accent-2:#52e0c4;
+      --danger:#ff6b60;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0e10;
+    --surface:#11181a;
+    --surface-2:#172023;
+    --border:#263133;
+    --text:#e9f2f0;
+    --text-muted:#8a9a9c;
+    --accent:#ff8a3d;
+    --accent-contrast:#1a0d02;
+    --accent-2:#52e0c4;
+    --danger:#ff6b60;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ margin:0; background:var(--bg); overscroll-behavior:none; }
+  body{
+    min-height:100vh;
+    min-height:100dvh;
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    user-select:none;
+  }
+  .app{
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:28px 18px 32px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .screen{ display:none; flex-direction:column; gap:22px; flex:1; }
+  .screen.active{ display:flex; }
+
+  h1,h2,h3,p{ margin:0; }
+
+  /* ---------- start screen ---------- */
+  .start-screen{ align-items:center; justify-content:center; text-align:center; gap:32px; }
+  .brand{ display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .brand-emoji{ font-size:64px; line-height:1; }
+  .eyebrow{
+    margin:0;
+    font-family:var(--font-display);
+    font-size:12px;
+    letter-spacing:.16em;
+    color:var(--accent);
+    font-weight:600;
+    text-transform:uppercase;
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-size:clamp(34px, 10vw, 46px);
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .lede{
+    max-width:34ch;
+    color:var(--text-muted);
+    font-size:15px;
+    line-height:1.6;
+  }
+  .btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    font-family:var(--font-body);
+    font-weight:700;
+    border-radius:16px;
+    transition:transform .1s ease, opacity .15s ease, background .15s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{
+    background:var(--accent);
+    color:var(--accent-contrast);
+    font-size:20px;
+    padding:20px 32px;
+    width:100%;
+    box-shadow:0 8px 24px rgba(232,89,12,.28);
+  }
+  .btn-secondary{
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
+    font-size:15px;
+    padding:12px 18px;
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--text-muted);
+    border:1px solid var(--border);
+    font-size:14px;
+    padding:10px 16px;
+  }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+
+  /* ---------- category screen ---------- */
+  .cat-header{ display:flex; flex-direction:column; gap:4px; text-align:center; }
+  .cat-header h2{ font-family:var(--font-display); font-size:22px; }
+  .cat-header p{ color:var(--text-muted); font-size:14px; }
+
+  .cat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .cat-card{
+    appearance:none;
+    border:2px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    border-radius:16px;
+    padding:20px 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    font-family:var(--font-body);
+    transition:transform .1s ease, border-color .15s ease, background .15s ease;
+  }
+  .cat-card:active{ transform:scale(.97); }
+  .cat-card .cat-emoji{ font-size:32px; }
+  .cat-card .cat-name{ font-weight:700; font-size:15px; }
+  .cat-card .cat-count{ font-size:12px; color:var(--text-muted); font-family:var(--font-display); }
+  .cat-card.selected{ border-color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+
+  .timer-picker{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .time-chip{
+    appearance:none;
+    border:2px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    border-radius:999px;
+    padding:8px 18px;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .time-chip.selected{ border-color:var(--accent-2); background:color-mix(in srgb, var(--accent-2) 16%, var(--surface)); color:var(--text); }
+
+  /* ---------- game screen ---------- */
+  .game-screen{ gap:16px; }
+  .game-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .game-cat-badge{
+    font-family:var(--font-display);
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:color-mix(in srgb, var(--accent) 14%, var(--surface));
+    border-radius:999px;
+    padding:6px 12px;
+  }
+  .word-progress{
+    font-family:var(--font-display);
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  .timer-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  .timer-display{
+    font-family:var(--font-display);
+    font-size:56px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-0.02em;
+    transition:color .2s ease;
+  }
+  .timer-display.warning{ color:var(--accent); }
+  .timer-display.timeup{ color:var(--danger); }
+  .timer-controls{ display:flex; gap:10px; }
+
+  .word-card{
+    flex:1;
+    min-height:180px;
+    background:var(--surface);
+    border:2px solid var(--border);
+    border-radius:22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    position:relative;
+  }
+  .word-text{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(28px, 8vw, 42px);
+    line-height:1.2;
+    word-break:break-word;
+  }
+  .word-placeholder{
+    color:var(--text-muted);
+    font-size:16px;
+    max-width:26ch;
+  }
+  .word-done{
+    color:var(--text-muted);
+    font-size:16px;
+    max-width:26ch;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:center;
+  }
+
+  .next-word-btn{
+    font-size:22px;
+    padding:24px 32px;
+  }
+
+  .game-actions{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+
+  .flash-overlay{
+    position:fixed;
+    inset:0;
+    background:var(--danger);
+    opacity:0;
+    pointer-events:none;
+    z-index:50;
+    transition:opacity .08s ease;
+  }
+  .flash-overlay.active{ animation:flash-pulse .5s ease 3; }
+  @keyframes flash-pulse{
+    0%, 100%{ opacity:0; }
+    50%{ opacity:.55; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .flash-overlay.active{ animation:none; opacity:0; }
+  }
+
+  @media (max-width:340px){
+    .cat-grid{ grid-template-columns:1fr 1fr; }
+    .timer-display{ font-size:44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<div class="app">
+
+  <!-- START SCREEN -->
+  <section class="screen start-screen active" id="screenStart">
+    <div class="brand">
+      <div class="brand-emoji">🎭</div>
+      <p class="eyebrow">Party-spil</p>
+      <h1 class="title">Tegn og gæt</h1>
+      <p class="lede">Send telefonen rundt, vælg en kategori, og gæt så meget som muligt inden tiden løber ud.</p>
+    </div>
+    <button type="button" class="btn btn-primary" id="startBtn">Start spil</button>
+  </section>
+
+  <!-- CATEGORY SCREEN -->
+  <section class="screen" id="screenCategory">
+    <div class="cat-header">
+      <h2>Vælg kategori</h2>
+      <p>Hvad skal I tegne og gætte i dag?</p>
+    </div>
+    <div class="cat-grid" id="catGrid"></div>
+
+    <div class="cat-header">
+      <h2 style="font-size:16px;">Tid pr. tur</h2>
+    </div>
+    <div class="timer-picker" id="timerPicker">
+      <button type="button" class="time-chip" data-secs="30">30 sek</button>
+      <button type="button" class="time-chip selected" data-secs="60">60 sek</button>
+      <button type="button" class="time-chip" data-secs="90">90 sek</button>
+    </div>
+
+    <button type="button" class="btn btn-primary" id="beginRoundBtn" disabled>Gå i gang</button>
+    <button type="button" class="btn btn-ghost" id="backToStartBtn">Tilbage</button>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section class="screen game-screen" id="screenGame">
+    <div class="game-top">
+      <span class="game-cat-badge" id="gameCatBadge">Kategori</span>
+      <span class="word-progress" id="wordProgress">0 / 0 ord brugt</span>
+    </div>
+
+    <div class="timer-wrap">
+      <div class="timer-display" id="timerDisplay">60</div>
+      <div class="timer-controls">
+        <button type="button" class="btn btn-secondary" id="timerToggleBtn">▶ Start</button>
+        <button type="button" class="btn btn-secondary" id="timerResetBtn">↺ Nulstil</button>
+      </div>
+    </div>
+
+    <div class="word-card" id="wordCard">
+      <p class="word-placeholder" id="wordPlaceholder">Tryk på "Vis ord" for at trække det første ord.</p>
+    </div>
+
+    <button type="button" class="btn btn-primary next-word-btn" id="nextWordBtn">Vis ord</button>
+
+    <div class="game-actions">
+      <button type="button" class="btn btn-ghost" id="changeCategoryBtn">Skift kategori</button>
+      <button type="button" class="btn btn-ghost" id="quitBtn">Afslut spil</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CATEGORIES = {
+    dyr: {
+      name: "Dyr",
+      emoji: "🐾",
+      words: ["Elefant","Løve","Tiger","Giraf","Zebra","Abe","Kænguru","Panda","Ræv","Ulv",
+        "Bjørn","Isbjørn","Krokodille","Slange","Skildpadde","Frø","Delfin","Hval","Haj","Blæksprutte",
+        "Pingvin","Struds","Ørn","Ugle","Flamingo","Kamel","Egern","Pindsvin","Mus","Kanin",
+        "Hund","Kat","Hest","Ko","Gris","Får","Hane","And","Svane","Firben",
+        "Edderkop","Sommerfugl","Myre","Bi","Flodhest"]
+    },
+    film: {
+      name: "Film & TV",
+      emoji: "🎬",
+      words: ["Star Wars","Harry Potter","Titanic","Jurassic Park","Frost","Matrix","Spider-Man","Batman","Ringenes Herre","Toy Story",
+        "Løvernes Konge","Shrek","Rocky","James Bond","Alene Hjemme","Grease","Vaiana","Find Nemo","Ice Age","Minions",
+        "Avatar","Fast & Furious","Mission Impossible","Skammerens Datter","Krøniken","Matador","Badehotellet","Vild med Dans","X Factor","Robinson Ekspeditionen",
+        "Klovn","Anders And","Wallace & Gromit","Tom og Jerry","Pokémon","Simpsons","SpongeBob","Grinch","Mummitrolden","Paw Patrol"]
+    },
+    mad: {
+      name: "Mad & Drikke",
+      emoji: "🍕",
+      words: ["Pizza","Burger","Sushi","Pasta","Pandekager","Is","Chokolade","Kaffe","Te","Vin",
+        "Øl","Champagne","Smoothie","Popcorn","Chips","Slik","Lagkage","Rugbrød","Frikadeller","Flæskesteg",
+        "Sild","Leverpostej","Wienerbrød","Æbleskiver","Gulerødder","Kartofler","Æg","Bacon","Pølse","Sennep",
+        "Ketchup","Mayonnaise","Salat","Suppe","Ris","Nudler","Taco","Kebab","Milkshake","Honning"]
+    },
+    sjove: {
+      name: "Sjove ting",
+      emoji: "🤪",
+      words: ["At snorkle","At sove","At danse","At synge","At hoppe i vandpytter","At børste tænder","At lave sneengle","At ro en båd","At spille tennis","At bage boller",
+        "At tage en selfie","At luge ukrudt","At klippe hår","At skifte et dæk","At folde vasketøj","At fiske","At stå på ski","At cykle","At male et billede","At synge karaoke",
+        "At spille fodbold","At kravle op ad en stige","At puste balloner op","At jonglere","At danse ballet","At robotdanse","At sove som en baby","At være en zombie","At være astronaut","At være pirat",
+        "At være en superhelt","At være en robot","At være et spøgelse","At tælle får","At spille luftguitar","At vaske op","At støvsuge","At vinke farvel","At give et kram","At sole sig"]
+    },
+    svaere: {
+      name: "Svære ord",
+      emoji: "🧠",
+      words: ["Frihed","Kærlighed","Jalousi","Lykke","Ensomhed","Håb","Retfærdighed","Demokrati","Uendelighed","Tyngdekraft",
+        "Fantasi","Nostalgi","Overraskelse","Balance","Tålmodighed","Mod","Ærlighed","Skæbne","Drøm","Kaos",
+        "Harmoni","Inflation","Filosofi","Evolution","Klimaforandring","Kunstig intelligens","Sarkasme","Ironi","Metafor","Paranoia",
+        "Deja vu","Karma","Meditation","Symmetri","Perspektiv","Illusion","Identitet","Empati","Fordom","Improvisation"]
+    }
+  };
+
+  // "Blandet" trækker fra alle øvrige kategorier for maksimal variation.
+  CATEGORIES.blandet = {
+    name: "Blandet",
+    emoji: "🎲",
+    words: Object.keys(CATEGORIES).reduce(function (acc, key) {
+      return acc.concat(CATEGORIES[key].words);
+    }, [])
+  };
+
+  var CATEGORY_ORDER = ["blandet", "dyr", "film", "mad", "sjove", "svaere"];
+
+  var state = {
+    categoryKey: null,
+    timerSeconds: 60,
+    deck: [],
+    used: [],
+    currentWord: null,
+    timeLeft: 60,
+    timerRunning: false,
+    timerInterval: null
+  };
+
+  var el = {};
+  [
+    "screenStart", "screenCategory", "screenGame",
+    "startBtn", "catGrid", "timerPicker", "beginRoundBtn", "backToStartBtn",
+    "gameCatBadge", "wordProgress", "timerDisplay", "timerToggleBtn", "timerResetBtn",
+    "wordCard", "nextWordBtn", "changeCategoryBtn", "quitBtn", "flashOverlay"
+  ].forEach(function (id) { el[id] = document.getElementById(id); });
+
+  function showScreen(id) {
+    ["screenStart", "screenCategory", "screenGame"].forEach(function (s) {
+      document.getElementById(s).classList.toggle("active", s === id);
+    });
+  }
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  // ---------- category screen ----------
+  function buildCategoryGrid() {
+    el.catGrid.innerHTML = "";
+    CATEGORY_ORDER.forEach(function (key) {
+      var cat = CATEGORIES[key];
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "cat-card";
+      card.dataset.key = key;
+      card.innerHTML =
+        '<span class="cat-emoji">' + cat.emoji + '</span>' +
+        '<span class="cat-name">' + cat.name + '</span>' +
+        '<span class="cat-count">' + cat.words.length + ' ord</span>';
+      card.addEventListener("click", function () {
+        state.categoryKey = key;
+        Array.prototype.forEach.call(el.catGrid.children, function (c) {
+          c.classList.toggle("selected", c === card);
+        });
+        el.beginRoundBtn.disabled = false;
+      });
+      el.catGrid.appendChild(card);
+    });
+  }
+
+  el.timerPicker.addEventListener("click", function (e) {
+    var chip = e.target.closest(".time-chip");
+    if (!chip) return;
+    state.timerSeconds = parseInt(chip.dataset.secs, 10);
+    Array.prototype.forEach.call(el.timerPicker.children, function (c) {
+      c.classList.toggle("selected", c === chip);
+    });
+  });
+
+  el.startBtn.addEventListener("click", function () {
+    showScreen("screenCategory");
+  });
+  el.backToStartBtn.addEventListener("click", function () {
+    showScreen("screenStart");
+  });
+
+  el.beginRoundBtn.addEventListener("click", function () {
+    startRound();
+    showScreen("screenGame");
+  });
+
+  el.changeCategoryBtn.addEventListener("click", function () {
+    stopTimer();
+    showScreen("screenCategory");
+  });
+  el.quitBtn.addEventListener("click", function () {
+    stopTimer();
+    showScreen("screenStart");
+  });
+
+  // ---------- game logic ----------
+  function startRound() {
+    var cat = CATEGORIES[state.categoryKey];
+    state.deck = shuffle(cat.words);
+    state.used = [];
+    state.currentWord = null;
+    el.gameCatBadge.textContent = cat.emoji + " " + cat.name;
+    updateProgress();
+    resetTimer();
+    el.wordCard.innerHTML = '<p class="word-placeholder" id="wordPlaceholder">Tryk på "Vis ord" for at trække det første ord.</p>';
+    el.nextWordBtn.textContent = "Vis ord";
+    el.nextWordBtn.disabled = false;
+  }
+
+  function updateProgress() {
+    var total = state.used.length + state.deck.length + (state.currentWord ? 0 : 0);
+    var totalWords = CATEGORIES[state.categoryKey].words.length;
+    el.wordProgress.textContent = state.used.length + " / " + totalWords + " ord brugt";
+  }
+
+  function drawNextWord() {
+    if (state.deck.length === 0) {
+      el.wordCard.innerHTML =
+        '<div class="word-done">' +
+        '<p>🎉 Alle ord i denne kategori er brugt!</p>' +
+        '<button type="button" class="btn btn-primary" id="reshuffleBtn">Start ny runde</button>' +
+        '</div>';
+      document.getElementById("reshuffleBtn").addEventListener("click", function () {
+        startRound();
+      });
+      el.nextWordBtn.disabled = true;
+      state.currentWord = null;
+      return;
+    }
+    state.currentWord = state.deck.pop();
+    state.used.push(state.currentWord);
+    el.wordCard.innerHTML = '<p class="word-text">' + escapeHtml(state.currentWord) + "</p>";
+    el.nextWordBtn.textContent = "Næste ord";
+    updateProgress();
+  }
+
+  function escapeHtml(str) {
+    var d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  el.nextWordBtn.addEventListener("click", drawNextWord);
+
+  // ---------- timer ----------
+  function formatTime(sec) {
+    sec = Math.max(0, sec);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+
+  function renderTimer() {
+    el.timerDisplay.textContent = formatTime(state.timeLeft);
+    el.timerDisplay.classList.toggle("warning", state.timeLeft <= 10 && state.timeLeft > 0);
+    el.timerDisplay.classList.toggle("timeup", state.timeLeft === 0);
+  }
+
+  function resetTimer() {
+    stopTimer();
+    state.timeLeft = state.timerSeconds;
+    renderTimer();
+    el.timerToggleBtn.textContent = "▶ Start";
+  }
+
+  function stopTimer() {
+    state.timerRunning = false;
+    if (state.timerInterval) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
+  }
+
+  function startTimer() {
+    if (state.timerRunning) return;
+    if (state.timeLeft <= 0) state.timeLeft = state.timerSeconds;
+    state.timerRunning = true;
+    el.timerToggleBtn.textContent = "⏸ Pause";
+    state.timerInterval = setInterval(function () {
+      state.timeLeft -= 1;
+      renderTimer();
+      if (state.timeLeft <= 0) {
+        stopTimer();
+        el.timerToggleBtn.textContent = "▶ Start";
+        onTimeUp();
+      }
+    }, 1000);
+  }
+
+  el.timerToggleBtn.addEventListener("click", function () {
+    if (state.timerRunning) {
+      stopTimer();
+      el.timerToggleBtn.textContent = "▶ Start";
+    } else {
+      startTimer();
+    }
+  });
+  el.timerResetBtn.addEventListener("click", resetTimer);
+
+  function onTimeUp() {
+    playBeep();
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+    el.flashOverlay.classList.remove("active");
+    // force reflow so the animation can restart
+    void el.flashOverlay.offsetWidth;
+    el.flashOverlay.classList.add("active");
+  }
+
+  var audioCtx = null;
+  function playBeep() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtx) audioCtx = new Ctx();
+      var now = audioCtx.currentTime;
+      [0, 0.28, 0.56].forEach(function (offset) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.3, now + offset + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.22);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.25);
+      });
+    } catch (e) { /* lyd er ikke kritisk for spillet */ }
+  }
+
+  // ---------- init ----------
+  buildCategoryGrid();
+})();
+</script>
+</body>
+</html>
