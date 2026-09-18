@@ -52,6 +52,20 @@ er tilgængeligt eller pladen er svær at læse.
   nummerplade.net) kan ikke web-scrapes fra browseren pga. CORS — i
   stedet får du et direkte link til pladens side på nummerplade.net.
 
+## `tegn-og-gaet.html` — Tegn og gæt
+
+Mobilvenlig "Tegn og gæt" (Charades)-app, perfekt til at sende telefonen
+rundt i stuen. Indeholder:
+
+- seks kategorier (Blandet, Dyr, Film & TV, Mad & Drikke, Sjove ting og
+  Svære ord) med store, indbyggede ordlister uden eksterne opslag,
+- ord trækkes tilfældigt fra den valgte kategori uden gentagelser i
+  samme runde, indtil alle ord er brugt — så kan man starte en ny runde,
+- en nedtælling (30/60/90 sek.) med start/pause-knap samt et rødt
+  flash og en lyd/vibration, når tiden løber ud,
+- stort UI med store knapper og læsbar skrift, designet til at blive
+  sendt rundt mellem spillere.
+
 ## `index.html` — Lyt
 
 Browserbaseret lyd-/musikgenkendelse (uafhængig af Pladelog).
