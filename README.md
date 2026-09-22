@@ -3,7 +3,7 @@
 Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
 mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
 
-## `service-overblik.html` — Service-overblik
+## `driftsradar.html` — Driftsradar
 
 Dashboard til at holde styr på de eksterne services, vores hjemmeside og
 drift afhænger af (fx Puzzel, Splashtop, Microsoft 365 og Azure).

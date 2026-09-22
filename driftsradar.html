@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Service-overblik</title>
+<title>Driftsradar</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
   :root{
@@ -167,7 +167,8 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>Service-overblik</h1>
+      <h1>📡 Driftsradar</h1>
+      <div class="sub">Status og overblik over de services vi er afhængige af</div>
       <div class="sub" id="lastRefresh">Ikke opdateret endnu</div>
     </div>
     <div class="toolbar">
@@ -710,7 +711,7 @@
   });
 
   $('#exportBtn').addEventListener('click', () => {
-    const payload = { app: 'service-overblik', version: 1, exported: new Date().toISOString(), services: state.services };
+    const payload = { app: 'driftsradar', version: 1, exported: new Date().toISOString(), services: state.services };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
