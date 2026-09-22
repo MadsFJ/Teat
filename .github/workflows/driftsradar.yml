@@ -24,17 +24,17 @@ jobs:
     if: github.event_name != 'push' || github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
       - name: Byg site
         run: |
           mkdir _site
           rsync -a --exclude '.git' --exclude '.github' --exclude '_site' ./ _site/
       - name: Hent status
         run: node driftsradar/hent-status.mjs _site/driftsradar/status.json
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
