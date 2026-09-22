@@ -268,15 +268,15 @@
     </label>
     <label>CORS-proxy (valgfri)
       <input name="proxy" placeholder="fx https://corsproxy.io/?url=">
-      <span class="hint">Bruges kun hvis en statusside/feed blokerer direkte kald fra browseren. URL'en sættes direkte efter (URL-kodet). Lad stå tom for at undgå tredjepart.</span>
+      <span class="hint">Normalt ikke nødvendig – serveren henter services fra den fælles liste. Bruges kun til services, der ikke er i den, og som blokerer direkte kald fra browseren. URL'en sættes direkte efter (URL-kodet). Lad stå tom for at undgå tredjepart.</span>
     </label>
     <fieldset>
       <legend>Del med kolleger</legend>
-      <span class="muted">Listen gemmes kun i denne browser. Eksportér til en JSON-fil og importér den hos kolleger, eller læg den i repo'et.</span>
+      <span class="muted">Ændringer her gemmes kun i denne browser. Den fælles liste ligger i <code>driftsradar/services.json</code> i repo'et – kun services derfra hentes af serveren, så de ikke blokeres af CORS. Opdatér den ved at eksportere og erstatte filen på GitHub.</span>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" id="exportBtn">⬇ Eksportér JSON</button>
         <button type="button" id="importBtn">⬆ Importér JSON</button>
-        <button type="button" class="danger" id="resetBtn">Nulstil til standard</button>
+        <button type="button" class="danger" id="resetBtn">Hent fælles liste</button>
         <input type="file" id="importFile" accept="application/json,.json" hidden>
       </div>
     </fieldset>
@@ -295,7 +295,13 @@
   const SETTINGS_KEY = 'serviceOverblik.settings.v1';
   const CACHE_KEY = 'serviceOverblik.cache.v1';
   const TIMEOUT_MS = 12000;
+  // Filer ved siden af siden. status.json skrives af GitHub Actions (se hent-status.mjs),
+  // som henter statussiderne fra en server, så browserens CORS-blokering undgås.
+  const SERVICES_URL = 'services.json';
+  const SNAPSHOT_URL = 'status.json';
+  const SNAPSHOT_FRESH_MS = 30 * 60000;
 
+  // Bruges kun hvis services.json ikke kan hentes (fx når filen åbnes direkte fra disken).
   const DEFAULT_SERVICES = [
     {
       name: 'Puzzel', category: 'Kundeservice / telefoni',
@@ -320,7 +326,7 @@
       statusType: 'rss', statusUrl: 'https://azure.status.microsoft/en-us/status',
       feedUrl: 'https://azure.status.microsoft/en-us/status/feed/',
       adminUrl: 'https://portal.azure.com/#view/Microsoft_Azure_Health/AzureHealthBrowseBlade/~/serviceIssues',
-      notes: 'Feedet kan kræve en CORS-proxy (se ⚙ Indstillinger).'
+      notes: 'Offentligt statusfeed for Azure.'
     }
   ];
 
@@ -335,9 +341,11 @@
   };
   const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
   const withIds = list => list.map(s => ({ id: uid(), ...s }));
+  const storedServices = load(STORE_KEY, null);
 
   const state = {
-    services: load(STORE_KEY, null) || withIds(DEFAULT_SERVICES),
+    services: storedServices || [],
+    snapshot: null,                  // indhold af status.json fra serveren
     settings: { interval: 5, proxy: '', ...load(SETTINGS_KEY, {}) },
     results: load(CACHE_KEY, {}),   // id -> resultat fra seneste hentning
     loading: new Set(),
@@ -373,18 +381,41 @@
       return await res.text();
     } finally { clearTimeout(t); }
   }
-  // Prøv direkte først, og via proxy hvis direkte kald fejler (typisk CORS).
-  async function fetchSmart(url) {
-    try { return await fetchText(url); }
-    catch (e) {
-      if (!state.settings.proxy) throw explain(e);
-      try { return await fetchText(url, { useProxy: true }); }
-      catch (e2) { throw explain(e2); }
-    }
+  async function fetchJson(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
   }
-  function explain(e) {
+  async function loadSnapshot() {
+    try { state.snapshot = await fetchJson(SNAPSHOT_URL); }
+    catch (e) { state.snapshot = null; }
+  }
+  async function loadSharedList() {
+    try { return cleanList(await fetchJson(SERVICES_URL)); }
+    catch (e) { return null; }
+  }
+
+  // Rækkefølge: frisk kopi fra serveren (status.json) → direkte → CORS-proxy → ældre kopi fra serveren.
+  async function fetchSmart(url) {
+    const snap = state.snapshot?.results?.[url];
+    const snapAge = snap?.ok ? Date.now() - new Date(snap.fetched) : Infinity;
+    if (snapAge < SNAPSHOT_FRESH_MS) return { text: snap.body, via: 'server', at: snap.fetched };
+    let err;
+    try { return { text: await fetchText(url), via: 'direkte' }; } catch (e) { err = e; }
+    if (state.settings.proxy) {
+      try { return { text: await fetchText(url, { useProxy: true }), via: 'proxy' }; } catch (e) { err = e; }
+    }
+    if (snap?.ok) return { text: snap.body, via: 'server', at: snap.fetched, stale: true };
+    throw explain(err, snap);
+  }
+  function explain(e, snap) {
+    if (snap && !snap.ok) return new Error('Heller ikke serveren kunne hente statussen: ' + snap.error);
     if (e.name === 'AbortError') return new Error('Timeout – siden svarede ikke');
-    if (e instanceof TypeError) return new Error('Kunne ikke hentes (sandsynligvis blokeret af CORS). Angiv en CORS-proxy under ⚙ Indstillinger, eller vælg "Kun link".');
+    if (e instanceof TypeError) {
+      return new Error(state.snapshot
+        ? 'Blokeret af CORS i browseren. Tilføj servicen til den fælles liste (driftsradar/services.json), så henter serveren den – se ⚙ Indstillinger.'
+        : 'Blokeret af CORS i browseren, og der er ingen server-kopi (status.json). Udgiv siden via GitHub Actions (se README), eller angiv en CORS-proxy under ⚙ Indstillinger.');
+    }
     return e;
   }
 
@@ -402,7 +433,8 @@
   async function fetchStatuspage(svc) {
     const base = baseOf(svc.statusUrl);
     if (!base) throw new Error('Ugyldig statusside-URL');
-    const data = JSON.parse(await fetchSmart(base + '/api/v2/summary.json'));
+    const res = await fetchSmart(base + '/api/v2/summary.json');
+    const data = JSON.parse(res.text);
     if (!data.status) throw new Error('Svaret ligner ikke et Statuspage-API');
     const [level, fallbackText] = INDICATOR[data.status.indicator] || ['unknown', 'Ukendt'];
     const incidents = (data.incidents || []).map(i => ({
@@ -425,14 +457,16 @@
       level: lvl,
       text: data.status.description || fallbackText,
       incidents, maintenance, components,
-      updated: data.page?.updated_at || null
+      updated: data.page?.updated_at || null,
+      via: res.via, viaAt: res.at, stale: res.stale
     };
   }
 
   async function fetchFeed(svc) {
     const url = svc.feedUrl || svc.statusUrl;
     if (!safeUrl(url)) throw new Error('Mangler feed-URL');
-    const xml = new DOMParser().parseFromString(await fetchSmart(url), 'text/xml');
+    const res = await fetchSmart(url);
+    const xml = new DOMParser().parseFromString(res.text, 'text/xml');
     if (xml.querySelector('parsererror')) throw new Error('Kunne ikke læse feedet (ikke gyldig RSS/Atom)');
     const nodes = [...xml.querySelectorAll('item, entry')];
     const txt = (el, sel) => el.querySelector(sel)?.textContent?.trim() || '';
@@ -454,7 +488,8 @@
       incidents: items,
       maintenance: [], components: [],
       updated: null,
-      feed: true
+      feed: true,
+      via: res.via, viaAt: res.at, stale: res.stale
     };
   }
 
@@ -480,6 +515,7 @@
     const btn = $('#refreshBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spin">↻</span> Henter …';
+    await loadSnapshot();
     await Promise.all(state.services.map(refreshOne));
     state.lastRefresh = new Date();
     $('#lastRefresh').textContent = 'Senest opdateret ' + fmtDate(state.lastRefresh);
@@ -544,7 +580,9 @@
         ${itemList(r.feed ? 'Seneste meddelelser' : 'Aktive hændelser', r.incidents)}
         ${itemList('Berørte komponenter', r.components)}
         ${itemList('Vedligeholdelse', r.maintenance)}
-        <div class="muted">${r.updated ? 'Statusside opdateret ' + esc(fmtDate(r.updated)) + ' · ' : ''}Hentet ${esc(fmtDate(r.fetched))}</div>`;
+        <div class="muted">${r.updated ? 'Statusside opdateret ' + esc(fmtDate(r.updated)) + ' · ' : ''}${r.via === 'server'
+          ? `Hentet af serveren ${esc(fmtDate(r.viaAt))}${r.stale ? ' <span class="soon">(forældet)</span>' : ''}`
+          : `Hentet ${esc(fmtDate(r.fetched))}`}</div>`;
     }
 
     let renewal = '';
@@ -616,6 +654,17 @@
   const svcDlg = $('#svcDlg'), svcForm = $('#svcForm');
   const FIELDS = ['name', 'category', 'statusType', 'statusUrl', 'feedUrl', 'adminUrl', 'owner', 'contact', 'accountNo', 'renewal', 'cost', 'notes'];
 
+  // Accepterer både et array og eksportformatet { services: [...] }.
+  function cleanList(data) {
+    const list = Array.isArray(data) ? data : data?.services;
+    if (!Array.isArray(list) || !list.every(s => s && typeof s.name === 'string')) throw new Error('Filen indeholder ikke en gyldig serviceliste');
+    return list.map(s => {
+      const o = { id: s.id || uid() };
+      FIELDS.forEach(f => { if (s[f] != null) o[f] = String(s[f]); });
+      return o;
+    });
+  }
+
   function openEditor(id) {
     state.editingId = id || null;
     const svc = state.services.find(s => s.id === id) || { statusType: 'statuspage' };
@@ -668,7 +717,7 @@
     if (!base) { msg.textContent = 'Indtast først en gyldig statusside-URL.'; return; }
     msg.textContent = 'Undersøger …';
     try {
-      const data = JSON.parse(await fetchSmart(base + '/api/v2/summary.json'));
+      const data = JSON.parse((await fetchSmart(base + '/api/v2/summary.json')).text);
       if (data.status) {
         svcForm.elements.statusType.value = 'statuspage';
         if (!svcForm.elements.name.value && data.page?.name) svcForm.elements.name.value = data.page.name;
@@ -679,7 +728,7 @@
     const clean = url.replace(/\/+$/, '');
     for (const cand of [base + '/history.rss', base + '/history.atom', clean + '/feed/', clean + '/rss', base + '/feed', base + '/rss']) {
       try {
-        const xml = new DOMParser().parseFromString(await fetchSmart(cand), 'text/xml');
+        const xml = new DOMParser().parseFromString((await fetchSmart(cand)).text, 'text/xml');
         if (!xml.querySelector('parsererror') && xml.querySelector('rss, feed, channel')) {
           svcForm.elements.statusType.value = 'rss';
           svcForm.elements.feedUrl.value = cand;
@@ -725,15 +774,8 @@
     e.target.value = '';
     if (!file) return;
     try {
-      const data = JSON.parse(await file.text());
-      const list = Array.isArray(data) ? data : data.services;
-      if (!Array.isArray(list) || !list.every(s => s && typeof s.name === 'string')) throw new Error('Filen indeholder ikke en gyldig serviceliste');
-      const replace = confirm(`Importér ${list.length} services.\n\nOK = erstat den nuværende liste\nAnnullér = tilføj til den nuværende liste`);
-      const cleaned = list.map(s => {
-        const o = { id: s.id || uid() };
-        FIELDS.forEach(f => { if (s[f] != null) o[f] = String(s[f]); });
-        return o;
-      });
+      const cleaned = cleanList(JSON.parse(await file.text()));
+      const replace = confirm(`Importér ${cleaned.length} services.\n\nOK = erstat den nuværende liste\nAnnullér = tilføj til den nuværende liste`);
       if (replace) { state.services = cleaned; state.results = {}; }
       else {
         const ids = new Set(state.services.map(s => s.id));
@@ -746,9 +788,9 @@
       refreshAll();
     } catch (err) { alert('Import fejlede: ' + err.message); }
   });
-  $('#resetBtn').addEventListener('click', () => {
-    if (!confirm('Erstat hele listen med standard-services (Puzzel, Splashtop, Microsoft)? Dine egne ændringer går tabt.')) return;
-    state.services = withIds(DEFAULT_SERVICES);
+  $('#resetBtn').addEventListener('click', async () => {
+    if (!confirm('Erstat listen i denne browser med den fælles liste fra services.json? Dine egne ændringer går tabt.')) return;
+    state.services = (await loadSharedList()) || withIds(DEFAULT_SERVICES);
     state.results = {};
     persistServices();
     persistResults();
@@ -772,10 +814,13 @@
     if (btn.dataset.act === 'refresh') refreshOne(svc);
   });
 
-  persistServices();
-  render();
-  refreshAll();
-  scheduleAuto();
+  (async () => {
+    if (!storedServices) state.services = (await loadSharedList()) || withIds(DEFAULT_SERVICES);
+    persistServices();
+    render();
+    refreshAll();
+    scheduleAuto();
+  })();
 })();
 </script>
 </body>
