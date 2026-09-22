@@ -3,6 +3,46 @@
 Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
 mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
 
+## `driftsradar/` — Driftsradar
+
+Dashboard til at holde styr på de eksterne services, vores hjemmeside og
+drift afhænger af (fx Puzzel, Splashtop, Microsoft 365 og Azure).
+
+- viser den vigtigste status fra hver services offentlige statusside:
+  samlet status, aktive hændelser, berørte komponenter og planlagt
+  vedligeholdelse (Atlassian Statuspage-API), eller de seneste
+  meddelelser fra et RSS/Atom-feed,
+- opsummering øverst (OK / advarsler / nedbrud / vedligehold /
+  fornyelser inden for 60 dage), services med problemer sorteres først,
+- tilføj, redigér og slet services — med "🔍 Find automatisk", der selv
+  finder ud af om statussiden har et API eller feed,
+- egne felter pr. service: admin-link, ansvarlig, support-kontakt,
+  kundenummer, fornyelsesdato (markeres når den nærmer sig), pris og noter,
+- søgning og filtrering på kategori/status, automatisk opdatering.
+
+**Status hentes af en server — ingen CORS-problemer.** De fleste
+statussider tillader ikke kald direkte fra en browser (CORS). Derfor
+henter GitHub Actions (`.github/workflows/driftsradar.yml`) status for
+alle services i den fælles liste `driftsradar/services.json` hvert 10.
+minut med `driftsradar/hent-status.mjs`, og udgiver resultatet som
+`driftsradar/status.json` sammen med siden på GitHub Pages. Siden bruger
+den kopi først og prøver kun direkte (eller via en valgfri CORS-proxy)
+for services, der ikke står i den fælles liste.
+
+**Opsætning (én gang):** Settings → Pages → Source: **GitHub Actions**.
+Siden ligger derefter på `https://<bruger>.github.io/<repo>/driftsradar/`.
+
+**Tilføj en service for alle:** tilføj den på siden, klik ⚙ Indstillinger
+→ ⬇ Eksportér JSON, og erstat `driftsradar/services.json` i repo'et med
+filen (eller redigér filen direkte på GitHub). Services, der kun
+tilføjes på siden, gemmes i den enkelte browsers `localStorage`.
+
+**Kendte begrænsninger:** GitHubs planlagte kørsler kan blive forsinket
+nogle minutter i travle perioder. Microsoft 365's detaljerede
+servicesundhed for vores egen tenant kræver admin-login og kan derfor
+ikke hentes; kortet linker i stedet til status.cloud.microsoft og admin
+centeret.
+
 ## `dart501/` — NUKE 501 Dart Arena
 
 Moderne, neon dark-mode 501-dartapp inspireret af den energiske

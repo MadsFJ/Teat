@@ -1,0 +1,43 @@
+{
+  "app": "driftsradar",
+  "version": 1,
+  "services": [
+    {
+      "id": "puzzel",
+      "name": "Puzzel",
+      "category": "Kundeservice / telefoni",
+      "statusType": "statuspage",
+      "statusUrl": "https://status.puzzel.com",
+      "adminUrl": "https://admin.puzzel.com",
+      "notes": "Contact center / telefoni-løsning."
+    },
+    {
+      "id": "splashtop",
+      "name": "Splashtop",
+      "category": "Fjernsupport",
+      "statusType": "statuspage",
+      "statusUrl": "https://status.splashtop.com",
+      "adminUrl": "https://my.splashtop.com",
+      "notes": "Fjernadgang og support til brugere."
+    },
+    {
+      "id": "microsoft-365",
+      "name": "Microsoft 365",
+      "category": "Microsoft",
+      "statusType": "none",
+      "statusUrl": "https://status.cloud.microsoft",
+      "adminUrl": "https://admin.microsoft.com/Adminportal/Home#/servicehealth",
+      "notes": "Offentlig status vises på status.cloud.microsoft. Detaljeret servicesundhed for vores tenant findes i Microsoft 365 admin center (kræver login)."
+    },
+    {
+      "id": "microsoft-azure",
+      "name": "Microsoft Azure",
+      "category": "Microsoft",
+      "statusType": "rss",
+      "statusUrl": "https://azure.status.microsoft/en-us/status",
+      "feedUrl": "https://azure.status.microsoft/en-us/status/feed/",
+      "adminUrl": "https://portal.azure.com/#view/Microsoft_Azure_Health/AzureHealthBrowseBlade/~/serviceIssues",
+      "notes": "Offentligt statusfeed for Azure."
+    }
+  ]
+}
