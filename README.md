@@ -3,6 +3,33 @@
 Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
 mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
 
+## `service-overblik.html` — Service-overblik
+
+Dashboard til at holde styr på de eksterne services, vores hjemmeside og
+drift afhænger af (fx Puzzel, Splashtop, Microsoft 365 og Azure).
+
+- henter automatisk den vigtigste status fra hver services offentlige
+  statusside: samlet status, aktive hændelser, berørte komponenter og
+  planlagt vedligeholdelse (Atlassian Statuspage-API), eller de seneste
+  meddelelser fra et RSS/Atom-feed,
+- opsummering øverst (OK / advarsler / nedbrud / vedligehold /
+  fornyelser inden for 60 dage), services med problemer sorteres først,
+- tilføj, redigér og slet services — med "🔍 Find automatisk", der selv
+  finder ud af om statussiden har et API eller feed,
+- egne felter pr. service: admin-link, ansvarlig, support-kontakt,
+  kundenummer, fornyelsesdato (markeres når den nærmer sig), pris og noter,
+- søgning og filtrering på kategori/status, automatisk opdatering
+  (standard hvert 5. minut),
+- listen gemmes i browserens `localStorage`; del den med kolleger via
+  eksport/import af en JSON-fil under ⚙ Indstillinger.
+
+**Kendte begrænsninger:** Nogle statussider/feeds tillader ikke kald
+direkte fra browseren (CORS) — så vises en fejl på kortet, og man kan
+angive en CORS-proxy under ⚙ Indstillinger eller sætte servicen til
+"Kun link". Microsoft 365's detaljerede servicesundhed for vores egen
+tenant kræver admin-login og kan derfor ikke hentes her; kortet linker
+i stedet til status.cloud.microsoft og admin centeret.
+
 ## `dart501/` — NUKE 501 Dart Arena
 
 Moderne, neon dark-mode 501-dartapp inspireret af den energiske

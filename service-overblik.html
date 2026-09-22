@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service-overblik</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f4f6f5;
+    --surface:#ffffff;
+    --surface-2:#eaf0ee;
+    --border:#d5deda;
+    --text:#0f1a1a;
+    --text-muted:#546462;
+    --accent:#0b6fd1;
+    --accent-contrast:#ffffff;
+    --ok:#1b8a4b;
+    --warn:#b86e00;
+    --bad:#c0392b;
+    --maint:#5b5bd6;
+    --unknown:#7a8786;
+    --font-display:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-body:'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a0e10;
+      --surface:#11181a;
+      --surface-2:#172023;
+      --border:#263133;
+      --text:#e9f2f0;
+      --text-muted:#8a9a9c;
+      --accent:#5aa9ff;
+      --accent-contrast:#04121f;
+      --ok:#3ddc84;
+      --warn:#ffb340;
+      --bad:#ff6b60;
+      --maint:#9d9dff;
+      --unknown:#8a9a9c;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0e10;
+    --surface:#11181a;
+    --surface-2:#172023;
+    --border:#263133;
+    --text:#e9f2f0;
+    --text-muted:#8a9a9c;
+    --accent:#5aa9ff;
+    --accent-contrast:#04121f;
+    --ok:#3ddc84;
+    --warn:#ffb340;
+    --bad:#ff6b60;
+    --maint:#9d9dff;
+    --unknown:#8a9a9c;
+  }
+
+  *{ box-sizing:border-box; }
+  html, body{ margin:0; background:var(--bg); }
+  body{
+    min-height:100vh;
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{ color:var(--accent); }
+  .wrap{ max-width:1100px; margin:0 auto; padding:20px 16px 60px; }
+
+  header{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  h1{ font-family:var(--font-display); font-size:22px; margin:0; letter-spacing:-.02em; }
+  .sub{ color:var(--text-muted); font-size:13px; margin-top:2px; }
+  .toolbar{ display:flex; flex-wrap:wrap; gap:8px; }
+
+  button, .btn{
+    font:inherit; font-size:14px; font-weight:600;
+    border:1px solid var(--border); background:var(--surface); color:var(--text);
+    border-radius:8px; padding:8px 12px; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  button:hover, .btn:hover{ border-color:var(--accent); }
+  button.primary{ background:var(--accent); color:var(--accent-contrast); border-color:var(--accent); }
+  button.danger{ color:var(--bad); }
+  button.small{ font-size:12px; padding:5px 9px; }
+  button:disabled{ opacity:.5; cursor:default; }
+
+  .tiles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:16px; }
+  .tile{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .tile .n{ font-family:var(--font-display); font-size:26px; font-weight:700; }
+  .tile .l{ color:var(--text-muted); font-size:13px; }
+  .tile.ok .n{ color:var(--ok); } .tile.warn .n{ color:var(--warn); }
+  .tile.bad .n{ color:var(--bad); } .tile.maint .n{ color:var(--maint); }
+
+  .filters{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  input, select, textarea{
+    font:inherit; color:var(--text); background:var(--surface);
+    border:1px solid var(--border); border-radius:8px; padding:8px 10px; width:100%;
+  }
+  textarea{ min-height:70px; resize:vertical; }
+  .filters input{ flex:1 1 220px; width:auto; }
+  .filters select{ flex:1 1 180px; width:auto; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(330px, 1fr)); gap:12px; }
+  @media (max-width:420px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:14px; display:flex; flex-direction:column; gap:10px; min-width:0;
+    border-left:5px solid var(--unknown);
+  }
+  .card.s-ok{ border-left-color:var(--ok); }
+  .card.s-warn{ border-left-color:var(--warn); }
+  .card.s-bad{ border-left-color:var(--bad); }
+  .card.s-maint{ border-left-color:var(--maint); }
+  .card-head{ display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .card h2{ font-size:17px; margin:0; overflow-wrap:anywhere; }
+  .cat{ font-size:12px; color:var(--text-muted); }
+  .badge{
+    font-family:var(--font-display); font-size:11px; font-weight:600; text-transform:uppercase;
+    padding:3px 8px; border-radius:99px; white-space:nowrap; letter-spacing:.03em;
+    background:var(--surface-2); color:var(--unknown);
+  }
+  .badge.s-ok{ color:var(--ok); } .badge.s-warn{ color:var(--warn); }
+  .badge.s-bad{ color:var(--bad); } .badge.s-maint{ color:var(--maint); }
+  .status-desc{ font-weight:600; }
+  .muted{ color:var(--text-muted); font-size:13px; }
+  .items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .items li{ background:var(--surface-2); border-radius:8px; padding:7px 9px; font-size:13px; overflow-wrap:anywhere; }
+  .items li b{ display:block; font-size:13px; }
+  .section-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
+  dl.meta{ display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0; font-size:13px; }
+  dl.meta dt{ color:var(--text-muted); }
+  dl.meta dd{ margin:0; overflow-wrap:anywhere; white-space:pre-wrap; }
+  .soon{ color:var(--warn); font-weight:600; }
+  .overdue{ color:var(--bad); font-weight:600; }
+  .links{ display:flex; flex-wrap:wrap; gap:10px; font-size:13px; }
+  .card-actions{ display:flex; gap:6px; margin-top:auto; padding-top:4px; flex-wrap:wrap; }
+  .err{ color:var(--bad); font-size:13px; overflow-wrap:anywhere; }
+  .empty{ text-align:center; color:var(--text-muted); padding:40px 0; }
+
+  dialog{
+    border:1px solid var(--border); border-radius:14px; background:var(--surface); color:var(--text);
+    padding:0; width:min(620px, calc(100vw - 32px)); max-height:calc(100vh - 40px);
+  }
+  dialog::backdrop{ background:rgba(0,0,0,.45); }
+  dialog form{ padding:18px; display:flex; flex-direction:column; gap:12px; }
+  dialog h3{ margin:0; font-family:var(--font-display); }
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:520px){ .row{ grid-template-columns:1fr; } }
+  label{ display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:600; }
+  label .hint{ font-weight:400; color:var(--text-muted); font-size:12px; }
+  .dlg-actions{ display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+  .detect-msg{ font-size:13px; }
+  fieldset{ border:1px solid var(--border); border-radius:10px; padding:10px 12px 12px; margin:0; display:flex; flex-direction:column; gap:10px; }
+  legend{ font-size:12px; font-weight:700; color:var(--text-muted); padding:0 4px; text-transform:uppercase; letter-spacing:.05em; }
+  .spin{ display:inline-block; animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Service-overblik</h1>
+      <div class="sub" id="lastRefresh">Ikke opdateret endnu</div>
+    </div>
+    <div class="toolbar">
+      <button class="primary" id="addBtn">+ Tilføj service</button>
+      <button id="refreshBtn">↻ Opdatér status</button>
+      <button id="settingsBtn">⚙ Indstillinger</button>
+    </div>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="filters">
+    <input id="search" type="search" placeholder="Søg i navn, kategori, ansvarlig, noter …">
+    <select id="catFilter"><option value="">Alle kategorier</option></select>
+    <select id="statusFilter">
+      <option value="">Alle statusser</option>
+      <option value="problem">Kun med problemer</option>
+      <option value="renewal">Fornyes inden for 60 dage</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Tilføj / redigér service -->
+<dialog id="svcDlg">
+  <form method="dialog" id="svcForm">
+    <h3 id="svcDlgTitle">Tilføj service</h3>
+    <div class="row">
+      <label>Navn *<input name="name" required placeholder="fx Puzzel"></label>
+      <label>Kategori<input name="category" list="catList" placeholder="fx Kundeservice"></label>
+    </div>
+    <datalist id="catList"></datalist>
+
+    <fieldset>
+      <legend>Status-kilde</legend>
+      <label>Statusside-URL
+        <input name="statusUrl" type="url" placeholder="https://status.eksempel.com">
+        <span class="hint">Offentlig statusside. Mange (Atlassian Statuspage) kan hentes automatisk.</span>
+      </label>
+      <div class="row">
+        <label>Type
+          <select name="statusType">
+            <option value="statuspage">Statuspage (JSON-API)</option>
+            <option value="rss">RSS/Atom-feed</option>
+            <option value="none">Kun link (hent ikke)</option>
+          </select>
+        </label>
+        <label>Feed-URL (kun RSS)
+          <input name="feedUrl" type="url" placeholder="https://…/feed">
+        </label>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button type="button" class="small" id="detectBtn">🔍 Find automatisk</button>
+        <span class="detect-msg muted" id="detectMsg"></span>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Vores info</legend>
+      <div class="row">
+        <label>Admin-/login-URL<input name="adminUrl" type="url" placeholder="https://admin.eksempel.com"></label>
+        <label>Ansvarlig hos os<input name="owner" placeholder="Navn"></label>
+      </div>
+      <div class="row">
+        <label>Support-kontakt<input name="contact" placeholder="Telefon / e-mail"></label>
+        <label>Kunde-/aftalenummer<input name="accountNo"></label>
+      </div>
+      <div class="row">
+        <label>Fornyelsesdato<input name="renewal" type="date"></label>
+        <label>Pris<input name="cost" placeholder="fx 1.200 kr./md."></label>
+      </div>
+      <label>Noter<textarea name="notes" placeholder="Hvad bruger vi den til, licenser, særlige aftaler …"></textarea></label>
+    </fieldset>
+
+    <div class="dlg-actions">
+      <button type="button" class="danger" id="deleteBtn" hidden>Slet</button>
+      <span style="flex:1"></span>
+      <button type="button" id="cancelBtn">Annullér</button>
+      <button type="submit" class="primary">Gem</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Indstillinger -->
+<dialog id="setDlg">
+  <form method="dialog" id="setForm">
+    <h3>Indstillinger</h3>
+    <label>Opdatér automatisk hvert
+      <select name="interval">
+        <option value="0">Aldrig</option>
+        <option value="2">2. minut</option>
+        <option value="5">5. minut</option>
+        <option value="15">15. minut</option>
+        <option value="60">time</option>
+      </select>
+    </label>
+    <label>CORS-proxy (valgfri)
+      <input name="proxy" placeholder="fx https://corsproxy.io/?url=">
+      <span class="hint">Bruges kun hvis en statusside/feed blokerer direkte kald fra browseren. URL'en sættes direkte efter (URL-kodet). Lad stå tom for at undgå tredjepart.</span>
+    </label>
+    <fieldset>
+      <legend>Del med kolleger</legend>
+      <span class="muted">Listen gemmes kun i denne browser. Eksportér til en JSON-fil og importér den hos kolleger, eller læg den i repo'et.</span>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" id="exportBtn">⬇ Eksportér JSON</button>
+        <button type="button" id="importBtn">⬆ Importér JSON</button>
+        <button type="button" class="danger" id="resetBtn">Nulstil til standard</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </fieldset>
+    <div class="dlg-actions">
+      <button type="button" id="setCancel">Annullér</button>
+      <button type="submit" class="primary">Gem</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+
+  const STORE_KEY = 'serviceOverblik.services.v1';
+  const SETTINGS_KEY = 'serviceOverblik.settings.v1';
+  const CACHE_KEY = 'serviceOverblik.cache.v1';
+  const TIMEOUT_MS = 12000;
+
+  const DEFAULT_SERVICES = [
+    {
+      name: 'Puzzel', category: 'Kundeservice / telefoni',
+      statusType: 'statuspage', statusUrl: 'https://status.puzzel.com',
+      adminUrl: 'https://admin.puzzel.com',
+      notes: 'Contact center / telefoni-løsning.'
+    },
+    {
+      name: 'Splashtop', category: 'Fjernsupport',
+      statusType: 'statuspage', statusUrl: 'https://status.splashtop.com',
+      adminUrl: 'https://my.splashtop.com',
+      notes: 'Fjernadgang og support til brugere.'
+    },
+    {
+      name: 'Microsoft 365', category: 'Microsoft',
+      statusType: 'none', statusUrl: 'https://status.cloud.microsoft',
+      adminUrl: 'https://admin.microsoft.com/Adminportal/Home#/servicehealth',
+      notes: 'Offentlig status vises på status.cloud.microsoft. Detaljeret servicesundhed for vores tenant findes i Microsoft 365 admin center (kræver login).'
+    },
+    {
+      name: 'Microsoft Azure', category: 'Microsoft',
+      statusType: 'rss', statusUrl: 'https://azure.status.microsoft/en-us/status',
+      feedUrl: 'https://azure.status.microsoft/en-us/status/feed/',
+      adminUrl: 'https://portal.azure.com/#view/Microsoft_Azure_Health/AzureHealthBrowseBlade/~/serviceIssues',
+      notes: 'Feedet kan kræve en CORS-proxy (se ⚙ Indstillinger).'
+    }
+  ];
+
+  // ---------- Lagring ----------
+  const load = (key, fallback) => {
+    try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; }
+    catch (e) { return fallback; }
+  };
+  const save = (key, value) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); }
+    catch (e) { /* localStorage utilgængeligt, fx i privat browsing */ }
+  };
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  const withIds = list => list.map(s => ({ id: uid(), ...s }));
+
+  const state = {
+    services: load(STORE_KEY, null) || withIds(DEFAULT_SERVICES),
+    settings: { interval: 5, proxy: '', ...load(SETTINGS_KEY, {}) },
+    results: load(CACHE_KEY, {}),   // id -> resultat fra seneste hentning
+    loading: new Set(),
+    lastRefresh: null,
+    editingId: null,
+    timer: null
+  };
+  const persistServices = () => save(STORE_KEY, state.services);
+  const persistResults = () => save(CACHE_KEY, state.results);
+
+  // ---------- Hjælpere ----------
+  const $ = sel => document.querySelector(sel);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+  const fmtDate = d => d ? new Date(d).toLocaleString('da-DK', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  const fmtDay = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('da-DK', { dateStyle: 'medium' }) : '';
+  const daysUntil = d => Math.ceil((new Date(d + 'T00:00:00') - new Date(new Date().toDateString())) / 86400000);
+  const stripHtml = html => {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return (div.textContent || '').replace(/\s+/g, ' ').trim();
+  };
+  const truncate = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+  const baseOf = url => { try { const u = new URL(url); return u.origin; } catch (e) { return ''; } };
+
+  async function fetchText(url, { useProxy = false } = {}) {
+    const target = useProxy && state.settings.proxy ? state.settings.proxy + encodeURIComponent(url) : url;
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(target, { signal: ctrl.signal, cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.text();
+    } finally { clearTimeout(t); }
+  }
+  // Prøv direkte først, og via proxy hvis direkte kald fejler (typisk CORS).
+  async function fetchSmart(url) {
+    try { return await fetchText(url); }
+    catch (e) {
+      if (!state.settings.proxy) throw explain(e);
+      try { return await fetchText(url, { useProxy: true }); }
+      catch (e2) { throw explain(e2); }
+    }
+  }
+  function explain(e) {
+    if (e.name === 'AbortError') return new Error('Timeout – siden svarede ikke');
+    if (e instanceof TypeError) return new Error('Kunne ikke hentes (sandsynligvis blokeret af CORS). Angiv en CORS-proxy under ⚙ Indstillinger, eller vælg "Kun link".');
+    return e;
+  }
+
+  // ---------- Status-kilder ----------
+  const INDICATOR = {
+    none: ['ok', 'Alt kører'], minor: ['warn', 'Mindre problemer'],
+    major: ['bad', 'Større problemer'], critical: ['bad', 'Kritisk nedbrud'],
+    maintenance: ['maint', 'Vedligeholdelse']
+  };
+  const COMPONENT_LABEL = {
+    degraded_performance: 'Nedsat ydelse', partial_outage: 'Delvist nede',
+    major_outage: 'Nede', under_maintenance: 'Vedligeholdelse'
+  };
+
+  async function fetchStatuspage(svc) {
+    const base = baseOf(svc.statusUrl);
+    if (!base) throw new Error('Ugyldig statusside-URL');
+    const data = JSON.parse(await fetchSmart(base + '/api/v2/summary.json'));
+    if (!data.status) throw new Error('Svaret ligner ikke et Statuspage-API');
+    const [level, fallbackText] = INDICATOR[data.status.indicator] || ['unknown', 'Ukendt'];
+    const incidents = (data.incidents || []).map(i => ({
+      title: i.name,
+      meta: [i.impact && i.impact !== 'none' ? 'Påvirkning: ' + i.impact : '', i.status, fmtDate(i.updated_at)].filter(Boolean).join(' · '),
+      text: truncate(stripHtml(i.incident_updates?.[0]?.body || ''), 220),
+      link: i.shortlink
+    }));
+    const maintenance = (data.scheduled_maintenances || []).map(m => ({
+      title: m.name,
+      meta: (m.status === 'in_progress' ? 'I gang · ' : 'Planlagt · ') + fmtDate(m.scheduled_for) + (m.scheduled_until ? ' – ' + fmtDate(m.scheduled_until) : ''),
+      link: m.shortlink
+    }));
+    const components = (data.components || [])
+      .filter(c => !c.group && c.status !== 'operational')
+      .map(c => ({ title: c.name, meta: COMPONENT_LABEL[c.status] || c.status }));
+    let lvl = level;
+    if (lvl === 'ok' && maintenance.some(m => m.meta.startsWith('I gang'))) lvl = 'maint';
+    return {
+      level: lvl,
+      text: data.status.description || fallbackText,
+      incidents, maintenance, components,
+      updated: data.page?.updated_at || null
+    };
+  }
+
+  async function fetchFeed(svc) {
+    const url = svc.feedUrl || svc.statusUrl;
+    if (!safeUrl(url)) throw new Error('Mangler feed-URL');
+    const xml = new DOMParser().parseFromString(await fetchSmart(url), 'text/xml');
+    if (xml.querySelector('parsererror')) throw new Error('Kunne ikke læse feedet (ikke gyldig RSS/Atom)');
+    const nodes = [...xml.querySelectorAll('item, entry')];
+    const txt = (el, sel) => el.querySelector(sel)?.textContent?.trim() || '';
+    const items = nodes.slice(0, 5).map(n => {
+      const linkEl = n.querySelector('link');
+      const link = linkEl ? (linkEl.getAttribute('href') || linkEl.textContent.trim()) : '';
+      const date = txt(n, 'pubDate') || txt(n, 'updated') || txt(n, 'published');
+      return {
+        title: txt(n, 'title'),
+        meta: date ? fmtDate(date) : '',
+        text: truncate(stripHtml(txt(n, 'description') || txt(n, 'summary') || txt(n, 'content')), 220),
+        link, date
+      };
+    });
+    const recent = items.filter(i => i.date && (Date.now() - new Date(i.date)) < 48 * 3600 * 1000);
+    return {
+      level: recent.length ? 'warn' : 'ok',
+      text: recent.length ? `${recent.length} meddelelse(r) de sidste 48 timer` : (items.length ? 'Ingen nye meddelelser' : 'Feedet er tomt – ingen aktive hændelser'),
+      incidents: items,
+      maintenance: [], components: [],
+      updated: null,
+      feed: true
+    };
+  }
+
+  async function refreshOne(svc) {
+    if (svc.statusType === 'none') { delete state.results[svc.id]; return; }
+    state.loading.add(svc.id);
+    renderCard(svc.id);
+    try {
+      const r = svc.statusType === 'rss' ? await fetchFeed(svc) : await fetchStatuspage(svc);
+      state.results[svc.id] = { ...r, fetched: new Date().toISOString() };
+    } catch (e) {
+      const prev = state.results[svc.id];
+      state.results[svc.id] = { ...(prev && !prev.error ? prev : {}), level: 'unknown', text: 'Kunne ikke hente status', error: e.message, fetched: new Date().toISOString() };
+    } finally {
+      state.loading.delete(svc.id);
+      persistResults();
+      renderCard(svc.id);
+      renderTiles();
+    }
+  }
+
+  async function refreshAll() {
+    const btn = $('#refreshBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin">↻</span> Henter …';
+    await Promise.all(state.services.map(refreshOne));
+    state.lastRefresh = new Date();
+    $('#lastRefresh').textContent = 'Senest opdateret ' + fmtDate(state.lastRefresh);
+    btn.disabled = false;
+    btn.textContent = '↻ Opdatér status';
+    render();
+  }
+
+  function scheduleAuto() {
+    clearInterval(state.timer);
+    const min = Number(state.settings.interval);
+    if (min > 0) state.timer = setInterval(refreshAll, min * 60000);
+  }
+
+  // ---------- Visning ----------
+  const LEVEL_LABEL = { ok: 'OK', warn: 'Advarsel', bad: 'Nedbrud', maint: 'Vedligehold', unknown: 'Ukendt', link: 'Kun link' };
+  const levelOf = svc => svc.statusType === 'none' ? 'link' : (state.results[svc.id]?.level || 'unknown');
+
+  function renderTiles() {
+    const counts = { ok: 0, warn: 0, bad: 0, maint: 0 };
+    state.services.forEach(s => { const l = levelOf(s); if (l in counts) counts[l]++; });
+    const renewSoon = state.services.filter(s => s.renewal && daysUntil(s.renewal) <= 60).length;
+    $('#tiles').innerHTML = `
+      <div class="tile"><div class="n">${state.services.length}</div><div class="l">Services i alt</div></div>
+      <div class="tile ok"><div class="n">${counts.ok}</div><div class="l">Kører normalt</div></div>
+      <div class="tile warn"><div class="n">${counts.warn}</div><div class="l">Advarsler</div></div>
+      <div class="tile bad"><div class="n">${counts.bad}</div><div class="l">Nedbrud</div></div>
+      <div class="tile maint"><div class="n">${counts.maint}</div><div class="l">Vedligeholdelse</div></div>
+      <div class="tile ${renewSoon ? 'warn' : ''}"><div class="n">${renewSoon}</div><div class="l">Fornyes ≤ 60 dage</div></div>`;
+  }
+
+  function renderCategories() {
+    const cats = [...new Set(state.services.map(s => s.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da'));
+    const sel = $('#catFilter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Alle kategorier</option>' + cats.map(c => `<option>${esc(c)}</option>`).join('');
+    sel.value = cats.includes(cur) ? cur : '';
+    $('#catList').innerHTML = cats.map(c => `<option value="${esc(c)}">`).join('');
+  }
+
+  function itemList(label, items) {
+    if (!items?.length) return '';
+    return `<div><div class="section-label">${esc(label)}</div><ul class="items">${items.map(i => `
+      <li>${safeUrl(i.link) ? `<b><a href="${esc(i.link)}" target="_blank" rel="noopener">${esc(i.title)}</a></b>` : `<b>${esc(i.title)}</b>`}
+        ${i.meta ? `<span class="muted">${esc(i.meta)}</span>` : ''}
+        ${i.text ? `<div>${esc(i.text)}</div>` : ''}</li>`).join('')}</ul></div>`;
+  }
+
+  function cardHtml(svc) {
+    const r = state.results[svc.id];
+    const lvl = levelOf(svc);
+    const loading = state.loading.has(svc.id);
+    let statusBlock;
+    if (svc.statusType === 'none') {
+      statusBlock = `<div class="muted">Status hentes ikke automatisk – ${safeUrl(svc.statusUrl) ? `se <a href="${esc(svc.statusUrl)}" target="_blank" rel="noopener">statussiden</a>` : 'tilføj en statusside-URL'}.</div>`;
+    } else if (!r) {
+      statusBlock = `<div class="muted">${loading ? 'Henter status …' : 'Ingen status hentet endnu.'}</div>`;
+    } else {
+      statusBlock = `
+        <div class="status-desc">${esc(r.text)}</div>
+        ${r.error ? `<div class="err">${esc(r.error)}</div>` : ''}
+        ${itemList(r.feed ? 'Seneste meddelelser' : 'Aktive hændelser', r.incidents)}
+        ${itemList('Berørte komponenter', r.components)}
+        ${itemList('Vedligeholdelse', r.maintenance)}
+        <div class="muted">${r.updated ? 'Statusside opdateret ' + esc(fmtDate(r.updated)) + ' · ' : ''}Hentet ${esc(fmtDate(r.fetched))}</div>`;
+    }
+
+    let renewal = '';
+    if (svc.renewal) {
+      const d = daysUntil(svc.renewal);
+      const cls = d < 0 ? 'overdue' : d <= 60 ? 'soon' : '';
+      const rel = d < 0 ? `(${-d} dage siden)` : d === 0 ? '(i dag)' : `(om ${d} dage)`;
+      renewal = `<span class="${cls}">${esc(fmtDay(svc.renewal))} ${rel}</span>`;
+    }
+    const meta = [
+      ['Ansvarlig', esc(svc.owner)], ['Support', esc(svc.contact)], ['Kundenr.', esc(svc.accountNo)],
+      ['Fornyes', renewal], ['Pris', esc(svc.cost)], ['Noter', esc(svc.notes)]
+    ].filter(([, v]) => v);
+
+    const links = [
+      safeUrl(svc.statusUrl) && `<a href="${esc(svc.statusUrl)}" target="_blank" rel="noopener">Statusside ↗</a>`,
+      safeUrl(svc.adminUrl) && `<a href="${esc(svc.adminUrl)}" target="_blank" rel="noopener">Admin / login ↗</a>`
+    ].filter(Boolean).join('');
+
+    return `
+      <div class="card-head">
+        <div><h2>${esc(svc.name)}</h2>${svc.category ? `<div class="cat">${esc(svc.category)}</div>` : ''}</div>
+        <span class="badge s-${lvl}">${loading ? '<span class="spin">↻</span>' : esc(LEVEL_LABEL[lvl])}</span>
+      </div>
+      ${statusBlock}
+      ${meta.length ? `<dl class="meta">${meta.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>` : ''}
+      ${links ? `<div class="links">${links}</div>` : ''}
+      <div class="card-actions">
+        ${svc.statusType !== 'none' ? `<button class="small" data-act="refresh" data-id="${svc.id}">↻ Opdatér</button>` : ''}
+        <button class="small" data-act="edit" data-id="${svc.id}">✎ Redigér</button>
+      </div>`;
+  }
+
+  function renderCard(id) {
+    const el = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+    const svc = state.services.find(s => s.id === id);
+    if (!el || !svc) return;
+    el.className = 'card s-' + levelOf(svc);
+    el.innerHTML = cardHtml(svc);
+  }
+
+  const RANK = { bad: 0, warn: 1, maint: 2, unknown: 3, ok: 4, link: 5 };
+  function visibleServices() {
+    const q = $('#search').value.trim().toLowerCase();
+    const cat = $('#catFilter').value;
+    const sf = $('#statusFilter').value;
+    return state.services
+      .filter(s => !cat || s.category === cat)
+      .filter(s => !q || [s.name, s.category, s.owner, s.notes, s.contact, s.accountNo].join(' ').toLowerCase().includes(q))
+      .filter(s => sf !== 'problem' || ['bad', 'warn', 'maint', 'unknown'].includes(levelOf(s)))
+      .filter(s => sf !== 'renewal' || (s.renewal && daysUntil(s.renewal) <= 60))
+      .sort((a, b) => (RANK[levelOf(a)] - RANK[levelOf(b)]) || a.name.localeCompare(b.name, 'da'));
+  }
+
+  function render() {
+    renderTiles();
+    renderCategories();
+    const list = visibleServices();
+    const grid = $('#grid');
+    if (!state.services.length) {
+      grid.innerHTML = '<div class="empty">Ingen services endnu – klik “+ Tilføj service”.</div>';
+      return;
+    }
+    if (!list.length) { grid.innerHTML = '<div class="empty">Ingen services matcher filteret.</div>'; return; }
+    grid.innerHTML = list.map(s => `<article class="card s-${levelOf(s)}" data-id="${esc(s.id)}">${cardHtml(s)}</article>`).join('');
+  }
+
+  // ---------- Tilføj / redigér ----------
+  const svcDlg = $('#svcDlg'), svcForm = $('#svcForm');
+  const FIELDS = ['name', 'category', 'statusType', 'statusUrl', 'feedUrl', 'adminUrl', 'owner', 'contact', 'accountNo', 'renewal', 'cost', 'notes'];
+
+  function openEditor(id) {
+    state.editingId = id || null;
+    const svc = state.services.find(s => s.id === id) || { statusType: 'statuspage' };
+    FIELDS.forEach(f => { svcForm.elements[f].value = svc[f] || ''; });
+    svcForm.elements.statusType.value = svc.statusType || 'statuspage';
+    $('#svcDlgTitle').textContent = id ? 'Redigér ' + svc.name : 'Tilføj service';
+    $('#deleteBtn').hidden = !id;
+    $('#detectMsg').textContent = '';
+    svcDlg.showModal();
+  }
+
+  svcForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const data = {};
+    FIELDS.forEach(f => { data[f] = svcForm.elements[f].value.trim(); });
+    if (!data.name) return;
+    let svc;
+    if (state.editingId) {
+      svc = state.services.find(s => s.id === state.editingId);
+      Object.assign(svc, data);
+      delete state.results[svc.id];
+    } else {
+      svc = { id: uid(), ...data };
+      state.services.push(svc);
+    }
+    persistServices();
+    persistResults();
+    svcDlg.close();
+    render();
+    refreshOne(svc);
+  });
+
+  $('#cancelBtn').addEventListener('click', () => svcDlg.close());
+  $('#deleteBtn').addEventListener('click', () => {
+    const svc = state.services.find(s => s.id === state.editingId);
+    if (!svc || !confirm(`Slet "${svc.name}"?`)) return;
+    state.services = state.services.filter(s => s.id !== svc.id);
+    delete state.results[svc.id];
+    persistServices();
+    persistResults();
+    svcDlg.close();
+    render();
+  });
+
+  // Find automatisk: prøv Statuspage-API, derefter almindelige feed-stier.
+  $('#detectBtn').addEventListener('click', async () => {
+    const msg = $('#detectMsg');
+    const url = svcForm.elements.statusUrl.value.trim();
+    const base = baseOf(url);
+    if (!base) { msg.textContent = 'Indtast først en gyldig statusside-URL.'; return; }
+    msg.textContent = 'Undersøger …';
+    try {
+      const data = JSON.parse(await fetchSmart(base + '/api/v2/summary.json'));
+      if (data.status) {
+        svcForm.elements.statusType.value = 'statuspage';
+        if (!svcForm.elements.name.value && data.page?.name) svcForm.elements.name.value = data.page.name;
+        msg.textContent = `✓ Statuspage fundet: "${data.status.description}"`;
+        return;
+      }
+    } catch (e) { /* prøv feeds */ }
+    const clean = url.replace(/\/+$/, '');
+    for (const cand of [base + '/history.rss', base + '/history.atom', clean + '/feed/', clean + '/rss', base + '/feed', base + '/rss']) {
+      try {
+        const xml = new DOMParser().parseFromString(await fetchSmart(cand), 'text/xml');
+        if (!xml.querySelector('parsererror') && xml.querySelector('rss, feed, channel')) {
+          svcForm.elements.statusType.value = 'rss';
+          svcForm.elements.feedUrl.value = cand;
+          msg.textContent = '✓ Feed fundet: ' + cand;
+          return;
+        }
+      } catch (e) { /* næste */ }
+    }
+    svcForm.elements.statusType.value = 'none';
+    msg.textContent = 'Kunne ikke finde et API eller feed (eller det er blokeret af CORS). Sat til "Kun link".';
+  });
+
+  // ---------- Indstillinger ----------
+  const setDlg = $('#setDlg'), setForm = $('#setForm');
+  $('#settingsBtn').addEventListener('click', () => {
+    setForm.elements.interval.value = String(state.settings.interval);
+    setForm.elements.proxy.value = state.settings.proxy || '';
+    setDlg.showModal();
+  });
+  $('#setCancel').addEventListener('click', () => setDlg.close());
+  setForm.addEventListener('submit', e => {
+    e.preventDefault();
+    state.settings.interval = Number(setForm.elements.interval.value);
+    state.settings.proxy = setForm.elements.proxy.value.trim();
+    save(SETTINGS_KEY, state.settings);
+    setDlg.close();
+    scheduleAuto();
+    refreshAll();
+  });
+
+  $('#exportBtn').addEventListener('click', () => {
+    const payload = { app: 'service-overblik', version: 1, exported: new Date().toISOString(), services: state.services };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'services-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const list = Array.isArray(data) ? data : data.services;
+      if (!Array.isArray(list) || !list.every(s => s && typeof s.name === 'string')) throw new Error('Filen indeholder ikke en gyldig serviceliste');
+      const replace = confirm(`Importér ${list.length} services.\n\nOK = erstat den nuværende liste\nAnnullér = tilføj til den nuværende liste`);
+      const cleaned = list.map(s => {
+        const o = { id: s.id || uid() };
+        FIELDS.forEach(f => { if (s[f] != null) o[f] = String(s[f]); });
+        return o;
+      });
+      if (replace) { state.services = cleaned; state.results = {}; }
+      else {
+        const ids = new Set(state.services.map(s => s.id));
+        cleaned.forEach(s => { if (ids.has(s.id)) s.id = uid(); state.services.push(s); });
+      }
+      persistServices();
+      persistResults();
+      setDlg.close();
+      render();
+      refreshAll();
+    } catch (err) { alert('Import fejlede: ' + err.message); }
+  });
+  $('#resetBtn').addEventListener('click', () => {
+    if (!confirm('Erstat hele listen med standard-services (Puzzel, Splashtop, Microsoft)? Dine egne ændringer går tabt.')) return;
+    state.services = withIds(DEFAULT_SERVICES);
+    state.results = {};
+    persistServices();
+    persistResults();
+    setDlg.close();
+    render();
+    refreshAll();
+  });
+
+  // ---------- Hændelser ----------
+  $('#addBtn').addEventListener('click', () => openEditor());
+  $('#refreshBtn').addEventListener('click', refreshAll);
+  $('#search').addEventListener('input', render);
+  $('#catFilter').addEventListener('change', render);
+  $('#statusFilter').addEventListener('change', render);
+  $('#grid').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const svc = state.services.find(s => s.id === btn.dataset.id);
+    if (!svc) return;
+    if (btn.dataset.act === 'edit') openEditor(svc.id);
+    if (btn.dataset.act === 'refresh') refreshOne(svc);
+  });
+
+  persistServices();
+  render();
+  refreshAll();
+  scheduleAuto();
+})();
+</script>
+</body>
+</html>
