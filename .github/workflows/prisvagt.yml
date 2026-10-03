@@ -1,0 +1,46 @@
+# Prisvagt: tjekker prisen på Linie Akvavit (se prisvagt/butikker.json) to gange
+# om dagen, gemmer historikken i repo'et og opretter et issue ved prisfald –
+# GitHub sender så en mail/notifikation til dig.
+name: Prisvagt – tjek pris på Linie Akvavit
+
+on:
+  schedule:
+    - cron: '17 5,15 * * *'   # ca. kl. 7 og 17 dansk tid
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: prisvagt
+  cancel-in-progress: false
+
+jobs:
+  tjek:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Hent priser
+        env:
+          ALARM_FIL: ${{ runner.temp }}/alarm.md
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: node prisvagt/hent-priser.mjs
+      - name: Gem historik
+        run: |
+          git config user.name "prisvagt-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prisvagt/historik.json
+          git diff --cached --quiet || git commit -m "Prisvagt: opdatér prishistorik"
+          git push
+      - name: Opret issue ved prisfald
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALARM_FIL: ${{ runner.temp }}/alarm.md
+        run: |
+          if [ -f "$ALARM_FIL" ]; then
+            gh issue create --title "🥃 Prisfald på Linie Akvavit" --body-file "$ALARM_FIL"
+          fi

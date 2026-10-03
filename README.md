@@ -3,6 +3,33 @@
 Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
 mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
 
+## `prisvagt/` — Prisvagt (Linie Akvavit)
+
+Bot der holder øje med prisen på Linie Akvavit og giver besked, når den
+falder.
+
+- GitHub Actions (`.github/workflows/prisvagt.yml`) kører
+  `prisvagt/hent-priser.mjs` ca. kl. 7 og 17 dansk tid,
+- prisen findes automatisk på hver side i `prisvagt/butikker.json` —
+  først via schema.org-data (JSON-LD), så meta-tags og til sidst et
+  "xxx kr"-beløb lige efter nøgleordet. Virker det ikke for en butik,
+  kan man angive et `regex` med prisen i første gruppe,
+- historikken gemmes i `prisvagt/historik.json`, og
+  `prisvagt/index.html` viser bedste pris og en prisgraf pr. butik,
+- ved prisfald eller når prisen kommer under `maalpris`, oprettes et
+  issue i repo'et (GitHub sender dig en mail). Sæt evt. secret'en
+  `NTFY_TOPIC` for også at få push-beskeder via ntfy-appen.
+
+**Tilføj en butik:** find produktsiden for Linie Akvavit, og tilføj
+`{ "navn": "...", "url": "...", "noegleord": "linie" }` i
+`butikker.json`. Kør derefter workflowet manuelt under Actions og tjek i
+loggen, at prisen ser rigtig ud.
+
+**Kendte begrænsninger:** nogle webshops blokerer automatiske kald eller
+henter først prisen med JavaScript — så finder botten ingen pris, og
+fejlen vises på siden. Workflowet skal have lov til at pushe til
+standardbranchen.
+
 ## `driftsradar/` — Driftsradar
 
 Dashboard til at holde styr på de eksterne services, vores hjemmeside og

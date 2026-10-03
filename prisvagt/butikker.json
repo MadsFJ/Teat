@@ -1,0 +1,11 @@
+{
+  "produkt": "Linie Akvavit 70 cl",
+  "maalpris": 120,
+  "butikker": [
+    {
+      "navn": "PriceRunner (laveste pris)",
+      "url": "https://www.pricerunner.dk/sp/linie-akvavit.html",
+      "noegleord": "linie"
+    }
+  ]
+}
