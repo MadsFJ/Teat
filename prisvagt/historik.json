@@ -2,21 +2,27 @@
   "butikker": {
     "https://www.bilka.dk/produkter/akvavit/100317226/": {
       "navn": "Bilka",
-      "priser": [],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
-      "fejl": "Kunne ikke finde en pris på siden"
+      "priser": [
+        {
+          "tid": "2026-10-03T21:38:22.699Z",
+          "pris": 139
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
+      "fejl": null,
+      "metode": "json-ld"
     },
     "https://www.foetex.dk/produkter/akvavit/100317226/": {
       "navn": "Føtex",
-      "priser": [],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
-      "fejl": "Kunne ikke finde en pris på siden"
-    },
-    "https://www.nemlig.com/linie-aquavit-41-5-5501948": {
-      "navn": "nemlig.com",
-      "priser": [],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
-      "fejl": "fetch failed"
+      "priser": [
+        {
+          "tid": "2026-10-03T21:38:22.699Z",
+          "pris": 189
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
+      "fejl": null,
+      "metode": "json-ld"
     },
     "https://www.bevco.dk/lysholm-linie-akvavit-41-5-70-cl./10415": {
       "navn": "Bevco",
@@ -26,7 +32,7 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -38,7 +44,7 @@
           "pris": 176
         }
       ],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -50,15 +56,9 @@
           "pris": 171.88
         }
       ],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
       "fejl": null,
       "metode": "json-ld"
-    },
-    "https://www.vinmedmere.dk/shop/228-bestseller/5025-linie-akvavit-415--70-cl/": {
-      "navn": "Vin med mere",
-      "priser": [],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
-      "fejl": "HTTP 404"
     },
     "https://slagelsevinkompagni.dk/snaps-akvavit-139/linie-aquavit-41-5-70-cl-p2140": {
       "navn": "Slagelse VinKompagni",
@@ -68,7 +68,7 @@
           "pris": 179
         }
       ],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -80,12 +80,12 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-10-03T21:37:36.460Z",
-      "fejl": null,
+      "sidstTjekket": "2026-10-03T21:38:22.699Z",
+      "fejl": "Kunne ikke finde en pris på siden",
       "metode": "json-ld"
     }
   },
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
-  "opdateret": "2026-10-03T21:37:36.460Z"
+  "opdateret": "2026-10-03T21:38:22.699Z"
 }
