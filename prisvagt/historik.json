@@ -1,13 +1,91 @@
 {
   "butikker": {
-    "https://www.pricerunner.dk/sp/linie-akvavit.html": {
-      "navn": "PriceRunner (laveste pris)",
+    "https://www.bilka.dk/produkter/akvavit/100317226/": {
+      "navn": "Bilka",
       "priser": [],
-      "sidstTjekket": "2026-10-03T21:36:45.712Z",
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
       "fejl": "Kunne ikke finde en pris på siden"
+    },
+    "https://www.foetex.dk/produkter/akvavit/100317226/": {
+      "navn": "Føtex",
+      "priser": [],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": "Kunne ikke finde en pris på siden"
+    },
+    "https://www.nemlig.com/linie-aquavit-41-5-5501948": {
+      "navn": "nemlig.com",
+      "priser": [],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": "fetch failed"
+    },
+    "https://www.bevco.dk/lysholm-linie-akvavit-41-5-70-cl./10415": {
+      "navn": "Bevco",
+      "priser": [
+        {
+          "tid": "2026-10-03T21:37:36.460Z",
+          "pris": 239
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": null,
+      "metode": "json-ld"
+    },
+    "https://www.topdrinks.dk/lysholm-linie-akvavit-matured-in-oak-sherry-casks-l0567700?___store=Topdrinks_dk_da": {
+      "navn": "Topdrinks",
+      "priser": [
+        {
+          "tid": "2026-10-03T21:37:36.460Z",
+          "pris": 176
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": null,
+      "metode": "json-ld"
+    },
+    "https://www.depot-odense.dk/spiritus/linie-akvavit-70-cl-flaske/": {
+      "navn": "Depot Odense",
+      "priser": [
+        {
+          "tid": "2026-10-03T21:37:36.460Z",
+          "pris": 171.88
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": null,
+      "metode": "json-ld"
+    },
+    "https://www.vinmedmere.dk/shop/228-bestseller/5025-linie-akvavit-415--70-cl/": {
+      "navn": "Vin med mere",
+      "priser": [],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": "HTTP 404"
+    },
+    "https://slagelsevinkompagni.dk/snaps-akvavit-139/linie-aquavit-41-5-70-cl-p2140": {
+      "navn": "Slagelse VinKompagni",
+      "priser": [
+        {
+          "tid": "2026-10-03T21:37:36.460Z",
+          "pris": 179
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": null,
+      "metode": "json-ld"
+    },
+    "https://vinspecialistenaarhus.dk/product_info.php?products_id=7469": {
+      "navn": "Vinspecialisten Aarhus",
+      "priser": [
+        {
+          "tid": "2026-10-03T21:37:36.460Z",
+          "pris": 239
+        }
+      ],
+      "sidstTjekket": "2026-10-03T21:37:36.460Z",
+      "fejl": null,
+      "metode": "json-ld"
     }
   },
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
-  "opdateret": "2026-10-03T21:36:45.712Z"
+  "opdateret": "2026-10-03T21:37:36.460Z"
 }
