@@ -108,6 +108,17 @@ export function findPris(html, butik) {
   return { pris: NaN, metode: null };
 }
 
+// Skriver lidt om siden i loggen, så man kan se hvor prisen gemmer sig og
+// evt. lave et regex til butikken.
+function diagnose(html) {
+  const titel = html.match(/<title[^>]*>([^<]*)/i)?.[1]?.trim();
+  console.log(`     ${html.length} tegn, titel: ${titel || '(ingen)'}`);
+  const felter = [...html.matchAll(/"(?:price|lowestPrice|lowPrice|amount)[A-Za-z]*"\s*:\s*[^,}\]]{1,30}/g)].slice(0, 8);
+  for (const m of felter) console.log('     felt:', m[0]);
+  const i = html.toLowerCase().indexOf('linie');
+  if (i !== -1) console.log('     ved "linie":', html.slice(i, i + 300).replace(/\s+/g, ' '));
+}
+
 async function hent(url) {
   const res = await fetch(url, {
     signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -140,8 +151,12 @@ async function main() {
     post.navn = butik.navn;
     post.sidstTjekket = nu;
     try {
-      const { pris, metode } = findPris(await hent(butik.url), butik);
-      if (!Number.isFinite(pris)) throw new Error('Kunne ikke finde en pris på siden');
+      const html = await hent(butik.url);
+      const { pris, metode } = findPris(html, butik);
+      if (!Number.isFinite(pris)) {
+        diagnose(html);
+        throw new Error('Kunne ikke finde en pris på siden');
+      }
       post.fejl = null;
       post.metode = metode;
       const forrige = post.priser.at(-1)?.pris;
