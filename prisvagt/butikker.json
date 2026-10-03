@@ -2,10 +2,14 @@
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
   "butikker": [
-    {
-      "navn": "PriceRunner (laveste pris)",
-      "url": "https://www.pricerunner.dk/sp/linie-akvavit.html",
-      "noegleord": "linie"
-    }
+    { "navn": "Bilka", "url": "https://www.bilka.dk/produkter/akvavit/100317226/", "noegleord": "linie" },
+    { "navn": "Føtex", "url": "https://www.foetex.dk/produkter/akvavit/100317226/", "noegleord": "linie" },
+    { "navn": "nemlig.com", "url": "https://www.nemlig.com/linie-aquavit-41-5-5501948", "noegleord": "linie" },
+    { "navn": "Bevco", "url": "https://www.bevco.dk/lysholm-linie-akvavit-41-5-70-cl./10415", "noegleord": "linie" },
+    { "navn": "Topdrinks", "url": "https://www.topdrinks.dk/lysholm-linie-akvavit-matured-in-oak-sherry-casks-l0567700?___store=Topdrinks_dk_da", "noegleord": "linie" },
+    { "navn": "Depot Odense", "url": "https://www.depot-odense.dk/spiritus/linie-akvavit-70-cl-flaske/", "noegleord": "linie" },
+    { "navn": "Vin med mere", "url": "https://www.vinmedmere.dk/shop/228-bestseller/5025-linie-akvavit-415--70-cl/", "noegleord": "linie" },
+    { "navn": "Slagelse VinKompagni", "url": "https://slagelsevinkompagni.dk/snaps-akvavit-139/linie-aquavit-41-5-70-cl-p2140", "noegleord": "linie" },
+    { "navn": "Vinspecialisten Aarhus", "url": "https://vinspecialistenaarhus.dk/product_info.php?products_id=7469", "noegleord": "linie" }
   ]
 }
