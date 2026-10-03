@@ -3,6 +3,25 @@
 Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
 mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
 
+## `mandat/` — Mandat (koncept)
+
+Landingsside-koncept til en startup inden for mænds hormonsundhed med
+fokus på testosteron. "Mandat" er et arbejdsnavn, og priser og forløb er
+pladsholdere.
+
+Designet undgår bevidst det typiske "AI-look" (lilla gradienter,
+glaseffekter, glødende kugler, stockfotos og emoji-ikoner). I stedet er
+retningen et **prøvesvar fra laboratoriet**: papir, blæk og én signalfarve,
+smalle tunge overskrifter, serif-brødtekst og monospace-etiketter. Al
+grafik er tegnet i SVG og bygget på data: et eksempel på et prøvesvar,
+en skematisk døgnkurve og en skeletformel. Siden understøtter mørk
+tilstand og mobil.
+
+Bemærk: tal på prøvesvaret og døgnkurven er illustrationer uden rigtige
+værdier. Tjek reglerne for markedsføring af receptpligtig medicin og
+sundhedsydelser (fx hos Lægemiddelstyrelsen) før siden bruges i
+virkeligheden.
+
 ## `driftsradar/` — Driftsradar
 
 Dashboard til at holde styr på de eksterne services, vores hjemmeside og

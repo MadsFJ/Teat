@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mandat — mænds hormonsundhed</title>
+<meta name="description" content="Blodprøve, lægesamtale og opfølgning for mænd, der vil have styr på testosteron og hormonsundhed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+  /*
+    Designretning: "prøvesvar fra laboratoriet", ikke "tech-startup".
+    - Papir, blæk og én signalfarve (laboratorie-orange) — ingen gradienter,
+      ingen glas-effekter, ingen glødende kugler, ingen stockfotos.
+    - Grafik er data: målebjælker, døgnkurve og et molekyle, tegnet i SVG.
+    - Smalle, tunge overskrifter (Archivo condensed), brødtekst i serif,
+      tal og etiketter i monospace — som et rigtigt journalark.
+  */
+  :root{
+    color-scheme: light dark;
+    --paper:#efe9dd;
+    --paper-2:#e6decd;
+    --card:#f8f4ec;
+    --ink:#16130f;
+    --ink-2:#4a4339;
+    --rule:#cbbfa8;
+    --rule-strong:#16130f;
+    --signal:#d4451a;
+    --signal-ink:#fff6ee;
+    --ok:#2f6b4a;
+    --font-head:'Archivo', 'Arial Narrow', sans-serif;
+    --font-body:'Source Serif 4', Georgia, serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#15130f;
+      --paper-2:#1d1a15;
+      --card:#1f1c17;
+      --ink:#efe7d8;
+      --ink-2:#b2a690;
+      --rule:#3a342b;
+      --rule-strong:#efe7d8;
+      --signal:#ff6a3a;
+      --signal-ink:#1a0a03;
+      --ok:#7fc49b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#15130f;
+    --paper-2:#1d1a15;
+    --card:#1f1c17;
+    --ink:#efe7d8;
+    --ink-2:#b2a690;
+    --rule:#3a342b;
+    --rule-strong:#efe7d8;
+    --signal:#ff6a3a;
+    --signal-ink:#1a0a03;
+    --ok:#7fc49b;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  html, body{ margin:0; background:var(--paper); }
+  body{
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:18px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* Svag papirstruktur: millimeterpapir i stedet for gradienter */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px),
+      linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+    background-size:24px 24px;
+    opacity:.18;
+  }
+  a{ color:inherit; }
+  section[id]{ scroll-margin-top:64px; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 16px; }
+  @media (min-width:720px){ .wrap{ padding:0 32px; } }
+
+  .mono{ font-family:var(--font-mono); font-size:13px; letter-spacing:.04em; text-transform:uppercase; }
+  .head{
+    font-family:var(--font-head);
+    font-stretch:68%;
+    font-weight:850;
+    text-transform:uppercase;
+    line-height:.88;
+    letter-spacing:-.005em;
+    margin:0;
+  }
+
+  /* ---------- Topbar ---------- */
+  .top{ border-bottom:2px solid var(--rule-strong); background:var(--paper); position:sticky; top:0; z-index:10; }
+  .top .wrap{ display:flex; align-items:center; justify-content:space-between; gap:16px; height:64px; }
+  .logo{ display:flex; align-items:baseline; gap:10px; text-decoration:none; }
+  .logo b{ font-family:var(--font-head); font-stretch:62%; font-weight:900; font-size:30px; letter-spacing:.02em; text-transform:uppercase; }
+  .logo span{ font-family:var(--font-mono); font-size:11px; color:var(--ink-2); display:none; }
+  @media (min-width:560px){ .logo span{ display:inline; } }
+  nav{ display:none; gap:24px; }
+  nav a{ text-decoration:none; font-family:var(--font-mono); font-size:13px; text-transform:uppercase; letter-spacing:.06em; }
+  nav a:hover{ text-decoration:underline; text-underline-offset:4px; }
+  @media (min-width:900px){ nav{ display:flex; } }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+    text-decoration:none; padding:12px 18px; border:2px solid var(--rule-strong);
+    background:var(--ink); color:var(--paper); cursor:pointer;
+    box-shadow:4px 4px 0 var(--signal);
+    transition:transform .12s, box-shadow .12s;
+  }
+  .btn:hover{ transform:translate(-1px,-1px); box-shadow:5px 5px 0 var(--signal); }
+  .btn:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--signal); }
+  .btn.ghost{ background:transparent; color:var(--ink); box-shadow:none; }
+  .btn.ghost:hover{ background:var(--paper-2); }
+  .top .btn{ padding:9px 14px; font-size:12px; }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding:48px 0 64px; border-bottom:2px solid var(--rule-strong); }
+  .hero .grid{ display:grid; gap:40px; }
+  @media (min-width:960px){ .hero .grid{ grid-template-columns:1.15fr .85fr; gap:56px; align-items:start; } }
+  .hero .meta{ display:flex; flex-wrap:wrap; gap:8px 20px; color:var(--ink-2); margin-bottom:24px; }
+  .hero .meta span::before{ content:"■ "; color:var(--signal); }
+  .hero h1{ font-size:clamp(64px, 14vw, 152px); }
+  .hero h1 em{ font-style:normal; color:var(--signal); }
+  .hero h1 .strike{ position:relative; color:var(--ink-2); }
+  .hero h1 .strike::after{
+    content:""; position:absolute; left:-2%; right:-2%; top:52%; height:.09em; background:var(--signal); transform:rotate(-3deg);
+  }
+  .lede{ font-size:21px; max-width:34em; margin:28px 0 32px; }
+  .lede strong{ font-weight:600; }
+  .cta-row{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+  .fine{ font-size:14px; color:var(--ink-2); margin-top:20px; max-width:38em; }
+
+  /* Prøvesvar-kortet */
+  .report{
+    background:var(--card); border:2px solid var(--rule-strong);
+    box-shadow:8px 8px 0 var(--ink);
+    position:relative; transform:rotate(.6deg);
+  }
+  .report header{ display:flex; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:2px solid var(--rule-strong); }
+  .report header .mono{ font-size:11px; }
+  .report h2{ font-family:var(--font-head); font-stretch:75%; font-weight:800; font-size:22px; text-transform:uppercase; margin:0; }
+  .report .rows{ padding:4px 18px 10px; }
+  .row{ display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:12px 0; border-bottom:1px dashed var(--rule); }
+  .row:last-child{ border-bottom:0; }
+  .row .name{ font-family:var(--font-mono); font-size:13px; font-weight:500; }
+  .row .flag{ font-family:var(--font-mono); font-size:11px; font-weight:600; padding:1px 6px; border:1.5px solid currentColor; justify-self:end; align-self:center; }
+  .row .flag.low{ color:var(--signal); }
+  .row .flag.ok{ color:var(--ok); }
+  .row .flag.na{ color:var(--ink-2); }
+  .bar{ grid-column:1 / -1; position:relative; height:12px; border:1.5px solid var(--ink); background:
+      repeating-linear-gradient(90deg, transparent 0 9px, var(--rule) 9px 10px); }
+  .bar .ref{ position:absolute; top:0; bottom:0; background:var(--paper-2); border-left:1.5px solid var(--ink); border-right:1.5px solid var(--ink); }
+  .bar .val{ position:absolute; top:-6px; width:4px; height:21px; background:var(--signal); transform:translateX(-50%); }
+  .bar .val.ok{ background:var(--ok); }
+  .report footer{ display:flex; justify-content:space-between; gap:12px; align-items:center; padding:12px 18px; border-top:2px solid var(--rule-strong); }
+  .report footer .mono{ font-size:11px; color:var(--ink-2); }
+  .stamp{
+    position:absolute; right:18px; bottom:64px;
+    font-family:var(--font-head); font-stretch:70%; font-weight:900; font-size:22px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--signal); border:3px solid var(--signal); padding:2px 10px; transform:rotate(-9deg); opacity:.85;
+    mix-blend-mode:multiply;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .stamp{ mix-blend-mode:normal; } }
+  :root[data-theme="dark"] .stamp{ mix-blend-mode:normal; }
+
+  /* ---------- Bånd ---------- */
+  .ticker{ background:var(--ink); color:var(--paper); overflow:hidden; border-bottom:2px solid var(--rule-strong); }
+  .ticker .track{ display:flex; gap:40px; white-space:nowrap; padding:14px 0; animation:tick 38s linear infinite; width:max-content; }
+  .ticker span{ font-family:var(--font-head); font-stretch:70%; font-weight:800; font-size:22px; text-transform:uppercase; letter-spacing:.03em; }
+  .ticker span::after{ content:"✕"; color:var(--signal); margin-left:40px; font-size:16px; vertical-align:2px; }
+  @keyframes tick{ to{ transform:translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce){ .ticker .track{ animation:none; } }
+
+  /* ---------- Sektioner ---------- */
+  section.block{ padding:72px 0; border-bottom:2px solid var(--rule-strong); }
+  .sec-head{ display:grid; gap:16px; margin-bottom:40px; }
+  @media (min-width:900px){ .sec-head{ grid-template-columns:200px 1fr; gap:32px; } }
+  .sec-head .num{ color:var(--signal); font-family:var(--font-mono); font-size:13px; font-weight:600; }
+  .sec-head h2{ font-size:clamp(44px, 8vw, 88px); }
+  .sec-head p{ margin:16px 0 0; max-width:36em; font-size:19px; color:var(--ink-2); }
+
+  /* Symptomtjek */
+  .check{ display:grid; gap:32px; }
+  .check .spacer{ display:none; }
+  @media (min-width:900px){ .check{ grid-template-columns:200px 1fr 320px; gap:32px; } .check .spacer{ display:block; } }
+  .symptoms{ list-style:none; margin:0; padding:0; border-top:2px solid var(--rule-strong); }
+  .symptoms li{ border-bottom:1px solid var(--rule); }
+  .symptoms label{ display:grid; grid-template-columns:28px 1fr auto; gap:14px; align-items:center; padding:14px 4px; cursor:pointer; font-size:19px; }
+  .symptoms label:hover{ background:var(--paper-2); }
+  .symptoms input{ appearance:none; -webkit-appearance:none; width:24px; height:24px; border:2px solid var(--ink); margin:0; display:grid; place-items:center; background:var(--card); cursor:pointer; }
+  .symptoms input:checked{ background:var(--ink); }
+  .symptoms input:checked::after{ content:""; width:12px; height:6px; border-left:3px solid var(--paper); border-bottom:3px solid var(--paper); transform:translateY(-2px) rotate(-45deg); }
+  .symptoms input:focus-visible{ outline:3px solid var(--signal); outline-offset:2px; }
+  .symptoms .code{ font-family:var(--font-mono); font-size:12px; color:var(--ink-2); }
+  .tally{ border:2px solid var(--rule-strong); background:var(--card); padding:22px; align-self:start; position:sticky; top:88px; }
+  .tally .count{ font-family:var(--font-head); font-stretch:62%; font-weight:900; font-size:120px; line-height:.8; margin:10px 0 14px; }
+  .tally .count small{ font-size:40px; color:var(--ink-2); }
+  .tally p{ margin:0 0 18px; font-size:16px; }
+  .tally .note{ font-size:13px; color:var(--ink-2); margin:16px 0 0; }
+
+  /* Forløb */
+  .steps{ display:grid; gap:0; border:2px solid var(--rule-strong); background:var(--card); }
+  @media (min-width:820px){ .steps{ grid-template-columns:repeat(4, 1fr); } }
+  .step{ padding:24px 22px 28px; border-bottom:2px solid var(--rule-strong); position:relative; }
+  .step:last-child{ border-bottom:0; }
+  @media (min-width:820px){ .step{ border-bottom:0; border-right:2px dashed var(--rule-strong); } .step:last-child{ border-right:0; } }
+  .step .n{ font-family:var(--font-head); font-stretch:62%; font-weight:900; font-size:84px; line-height:.8; color:var(--signal); }
+  .step h3{ font-family:var(--font-head); font-stretch:75%; font-weight:800; font-size:26px; text-transform:uppercase; margin:18px 0 8px; line-height:1; }
+  .step p{ margin:0; font-size:16px; }
+  .step .when{ display:block; margin-top:16px; color:var(--ink-2); }
+  .step svg{ position:absolute; right:18px; top:24px; width:44px; height:44px; }
+
+  /* Døgnkurve */
+  .curve-wrap{ display:grid; gap:32px; }
+  @media (min-width:900px){ .curve-wrap{ grid-template-columns:200px 1fr; } }
+  .curve-card{ border:2px solid var(--rule-strong); background:var(--card); padding:20px 18px 14px; }
+  .curve-card svg{ width:100%; height:auto; display:block; }
+  .curve-card .cap{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:var(--ink-2); margin-top:10px; }
+  .curve-axis{ font-family:var(--font-mono); font-size:11px; fill:var(--ink-2); }
+  .curve-line{ fill:none; stroke:var(--ink); stroke-width:3; stroke-linejoin:round; stroke-dasharray:1400; stroke-dashoffset:1400; transition:stroke-dashoffset 2.2s ease-out; }
+  .curve-card.seen .curve-line{ stroke-dashoffset:0; }
+  @media (prefers-reduced-motion: reduce){ .curve-line{ transition:none; stroke-dashoffset:0; } }
+
+  /* Principper */
+  .rules{ display:grid; gap:0; border-top:2px solid var(--rule-strong); }
+  @media (min-width:820px){ .rules{ grid-template-columns:1fr 1fr; } }
+  .rule{ display:grid; grid-template-columns:56px 1fr; gap:16px; padding:24px 0; border-bottom:1px solid var(--rule); }
+  @media (min-width:820px){ .rule:nth-child(odd){ padding-right:32px; border-right:1px solid var(--rule); } .rule:nth-child(even){ padding-left:32px; } }
+  .rule .x{ font-family:var(--font-head); font-stretch:62%; font-weight:900; font-size:56px; line-height:.8; color:var(--signal); }
+  .rule h3{ font-family:var(--font-head); font-stretch:75%; font-weight:800; font-size:24px; text-transform:uppercase; margin:0 0 6px; line-height:1.05; }
+  .rule p{ margin:0; font-size:16px; color:var(--ink-2); }
+
+  /* Molekyle-bånd */
+  .molecule{ display:grid; gap:32px; align-items:center; }
+  @media (min-width:900px){ .molecule{ grid-template-columns:1fr 1fr; } }
+  .molecule svg{ width:100%; max-width:520px; height:auto; }
+  .molecule .mol-line{ fill:none; stroke:var(--ink); stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; }
+  .molecule .mol-text{ font-family:var(--font-mono); font-size:13px; font-weight:600; fill:var(--signal); }
+  .molecule blockquote{ margin:0; font-family:var(--font-body); font-style:italic; font-size:clamp(24px, 3.4vw, 36px); line-height:1.25; }
+  .molecule blockquote footer{ font-style:normal; margin-top:18px; }
+
+  /* Priser */
+  .prices{ display:grid; gap:24px; }
+  @media (min-width:860px){ .prices{ grid-template-columns:repeat(3, 1fr); } }
+  .price{ border:2px solid var(--rule-strong); background:var(--card); display:flex; flex-direction:column; }
+  .price.main{ box-shadow:8px 8px 0 var(--signal); }
+  .price header{ padding:18px 20px; border-bottom:2px solid var(--rule-strong); display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+  .price h3{ font-family:var(--font-head); font-stretch:75%; font-weight:800; font-size:26px; text-transform:uppercase; margin:0; }
+  .price .amount{ padding:20px 20px 0; font-family:var(--font-head); font-stretch:62%; font-weight:900; font-size:64px; line-height:.9; }
+  .price .amount small{ font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--ink-2); letter-spacing:.04em; display:block; margin-top:6px; }
+  .price ul{ list-style:none; margin:20px; padding:0; font-size:16px; flex:1; }
+  .price li{ padding:8px 0 8px 22px; border-bottom:1px dashed var(--rule); position:relative; }
+  .price li::before{ content:"—"; position:absolute; left:0; color:var(--signal); font-weight:700; }
+  .price .btn{ margin:0 20px 20px; justify-content:center; }
+
+  /* FAQ */
+  .faq{ border-top:2px solid var(--rule-strong); }
+  .faq details{ border-bottom:1px solid var(--rule); }
+  .faq summary{ list-style:none; cursor:pointer; display:grid; grid-template-columns:1fr 32px; gap:16px; align-items:center; padding:20px 0; font-family:var(--font-head); font-stretch:80%; font-weight:750; font-size:clamp(20px, 2.6vw, 26px); text-transform:uppercase; line-height:1.1; }
+  .faq summary::-webkit-details-marker{ display:none; }
+  .faq summary::after{ content:"+"; font-family:var(--font-mono); font-size:28px; font-weight:500; text-align:center; color:var(--signal); }
+  .faq details[open] summary::after{ content:"−"; }
+  .faq summary:focus-visible{ outline:3px solid var(--signal); outline-offset:4px; }
+  .faq .ans{ padding:0 0 24px; max-width:44em; font-size:17px; }
+  .faq .ans p{ margin:0 0 10px; }
+
+  /* Afslutning */
+  .closing{ padding:80px 0; background:var(--ink); color:var(--paper); }
+  .closing .head{ font-size:clamp(56px, 12vw, 140px); }
+  .closing .head em{ font-style:normal; color:var(--signal); }
+  .closing p{ font-size:20px; max-width:32em; margin:24px 0 32px; color:color-mix(in srgb, var(--paper) 80%, transparent); }
+  .closing .btn{ background:var(--signal); color:var(--signal-ink); border-color:var(--signal); box-shadow:4px 4px 0 var(--paper); }
+
+  footer.site{ padding:40px 0 56px; font-size:14px; color:var(--ink-2); }
+  footer.site .cols{ display:grid; gap:24px; }
+  @media (min-width:820px){ footer.site .cols{ grid-template-columns:1fr 2fr; } }
+  footer.site .logo b{ font-size:26px; color:var(--ink); }
+  footer.site p{ margin:0 0 10px; max-width:52em; }
+
+  .reveal{ opacity:0; transform:translateY(14px); transition:opacity .6s, transform .6s; }
+  .reveal.seen{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#">
+      <b>Mandat</b><span>/ hormonsundhed for mænd</span>
+    </a>
+    <nav aria-label="Hovedmenu">
+      <a href="#tjek">Tjek</a>
+      <a href="#forloeb">Forløb</a>
+      <a href="#principper">Principper</a>
+      <a href="#priser">Priser</a>
+      <a href="#faq">Spørgsmål</a>
+    </nav>
+    <a class="btn" href="#priser">Book prøve</a>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap grid">
+      <div>
+        <div class="meta mono">
+          <span>Blodprøve</span><span>Lægesamtale</span><span>Opfølgning</span>
+        </div>
+        <h1 class="head">
+          <span class="strike">Gæt.</span><br>
+          <em>Mål</em> det.
+        </h1>
+        <p class="lede">
+          Træt hele tiden? Mindre lyst, kortere lunte, svært ved at holde formen?
+          Det <strong>kan</strong> handle om testosteron — eller noget helt andet.
+          Vi starter med en blodprøve og en læge, der rent faktisk kigger på tallene.
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="#priser">Bestil blodprøve →</a>
+          <a class="btn ghost" href="#forloeb">Sådan foregår det</a>
+        </div>
+        <p class="fine">
+          Ingen behandling uden blodprøver og lægefaglig vurdering.
+          Testosteronbehandling er receptpligtig og kun relevant ved dokumenteret behov.
+        </p>
+      </div>
+
+      <article class="report reveal" aria-label="Eksempel på prøvesvar">
+        <header>
+          <div>
+            <h2>Prøvesvar</h2>
+            <div class="mono">Hormonpanel · morgenprøve</div>
+          </div>
+          <div class="mono" style="text-align:right">Ref. nr.<br>MND-0001</div>
+        </header>
+        <div class="stamp" aria-hidden="true">Eksempel</div>
+        <div class="rows">
+          <div class="row">
+            <span class="name">Testosteron, total</span><span class="flag low">LAV</span>
+            <div class="bar"><div class="ref" style="left:30%;width:46%"></div><div class="val" style="left:22%"></div></div>
+          </div>
+          <div class="row">
+            <span class="name">Testosteron, frit (beregnet)</span><span class="flag low">LAV</span>
+            <div class="bar"><div class="ref" style="left:28%;width:50%"></div><div class="val" style="left:19%"></div></div>
+          </div>
+          <div class="row">
+            <span class="name">SHBG</span><span class="flag ok">OK</span>
+            <div class="bar"><div class="ref" style="left:20%;width:55%"></div><div class="val ok" style="left:58%"></div></div>
+          </div>
+          <div class="row">
+            <span class="name">LH</span><span class="flag ok">OK</span>
+            <div class="bar"><div class="ref" style="left:24%;width:48%"></div><div class="val ok" style="left:36%"></div></div>
+          </div>
+          <div class="row">
+            <span class="name">Hæmatokrit</span><span class="flag ok">OK</span>
+            <div class="bar"><div class="ref" style="left:26%;width:44%"></div><div class="val ok" style="left:44%"></div></div>
+          </div>
+          <div class="row">
+            <span class="name">PSA</span><span class="flag na">AFVENTER</span>
+            <div class="bar"><div class="ref" style="left:0;width:40%"></div></div>
+          </div>
+        </div>
+        <footer>
+          <span class="mono">Illustration — ikke rigtige værdier</span>
+          <svg width="96" height="24" viewBox="0 0 96 24" aria-hidden="true">
+            <g fill="currentColor">
+              <rect x="0" width="2" height="24"/><rect x="4" width="1" height="24"/><rect x="7" width="3" height="24"/>
+              <rect x="12" width="1" height="24"/><rect x="15" width="2" height="24"/><rect x="19" width="1" height="24"/>
+              <rect x="22" width="3" height="24"/><rect x="27" width="1" height="24"/><rect x="30" width="2" height="24"/>
+              <rect x="34" width="1" height="24"/><rect x="37" width="3" height="24"/><rect x="42" width="2" height="24"/>
+              <rect x="46" width="1" height="24"/><rect x="49" width="1" height="24"/><rect x="52" width="3" height="24"/>
+              <rect x="57" width="2" height="24"/><rect x="61" width="1" height="24"/><rect x="64" width="3" height="24"/>
+              <rect x="69" width="1" height="24"/><rect x="72" width="2" height="24"/><rect x="76" width="1" height="24"/>
+              <rect x="79" width="3" height="24"/><rect x="84" width="1" height="24"/><rect x="87" width="2" height="24"/>
+              <rect x="91" width="1" height="24"/><rect x="94" width="2" height="24"/>
+            </g>
+          </svg>
+        </footer>
+      </article>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="track">
+      <span>Data før doser</span><span>Læge, ikke chatbot</span><span>Morgenprøve kl. 7–10</span><span>Opfølgning hver gang</span><span>Ingen hurtige løsninger</span>
+      <span>Data før doser</span><span>Læge, ikke chatbot</span><span>Morgenprøve kl. 7–10</span><span>Opfølgning hver gang</span><span>Ingen hurtige løsninger</span>
+    </div>
+  </div>
+
+  <!-- SYMPTOMTJEK -->
+  <section class="block" id="tjek">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="num">01 / Tjek</div>
+        <div>
+          <h2 class="head">Kender du<br>det her?</h2>
+          <p>Sæt kryds ved det, der passer. Det er ikke en diagnose — mange af tegnene kan skyldes søvn, stress, vægt eller medicin. Men det er en god grund til at måle.</p>
+        </div>
+      </div>
+      <div class="check">
+        <div class="spacer"></div>
+        <ul class="symptoms" id="symptoms">
+          <li><label><input type="checkbox"><span>Træt, selv efter en hel nats søvn</span><span class="code">S-01</span></label></li>
+          <li><label><input type="checkbox"><span>Mindre lyst til sex end før</span><span class="code">S-02</span></label></li>
+          <li><label><input type="checkbox"><span>Rejsningsproblemer</span><span class="code">S-03</span></label></li>
+          <li><label><input type="checkbox"><span>Taber muskelmasse trods træning</span><span class="code">S-04</span></label></li>
+          <li><label><input type="checkbox"><span>Mere fedt omkring maven</span><span class="code">S-05</span></label></li>
+          <li><label><input type="checkbox"><span>Kort lunte eller nedtrykt humør</span><span class="code">S-06</span></label></li>
+          <li><label><input type="checkbox"><span>Dårligere koncentration</span><span class="code">S-07</span></label></li>
+          <li><label><input type="checkbox"><span>Sover dårligt</span><span class="code">S-08</span></label></li>
+        </ul>
+        <aside class="tally" aria-live="polite">
+          <div class="mono">Dine kryds</div>
+          <div class="count"><span id="count">0</span><small>/8</small></div>
+          <p id="tally-text">Sæt kryds ud for de udsagn, der passer på dig.</p>
+          <a class="btn" href="#priser">Mål det i stedet →</a>
+          <p class="note">Ved brystsmerter, tanker om selvskade eller pludselige alvorlige symptomer: kontakt egen læge, lægevagten eller 112.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORLØB -->
+  <section class="block" id="forloeb">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="num">02 / Forløb</div>
+        <div>
+          <h2 class="head">Fire trin.<br>Ingen genveje.</h2>
+          <p>Det samme forløb for alle. Du får kun en behandlingsplan, hvis tallene og lægen siger, at det giver mening.</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 4 C22 4 9 20 9 28 a13 13 0 0 0 26 0 C35 20 22 4 22 4Z" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M15 29 a7 7 0 0 0 7 7" fill="none" stroke="var(--signal)" stroke-width="2.5"/></svg>
+          <div class="n">01</div>
+          <h3>Blodprøve</h3>
+          <p>Morgenprøve hos et samarbejdende laboratorium. Vi måler et bredt panel — ikke kun testosteron.</p>
+          <span class="when mono">Dag 1</span>
+        </div>
+        <div class="step reveal">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><rect x="5" y="9" width="34" height="24" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M14 33 l-4 7 l10 -7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 18 h20 M12 24 h12" stroke="var(--signal)" stroke-width="2.5"/></svg>
+          <div class="n">02</div>
+          <h3>Lægesamtale</h3>
+          <p>En læge gennemgår dine svar, din historik og dine symptomer med dig. På video eller i klinikken.</p>
+          <span class="when mono">Dag 5–10</span>
+        </div>
+        <div class="step reveal">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M8 5 h22 l6 6 v28 h-28 z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M14 20 l5 5 l10 -10" fill="none" stroke="var(--signal)" stroke-width="2.5"/><path d="M14 32 h16" stroke="currentColor" stroke-width="2.5"/></svg>
+          <div class="n">03</div>
+          <h3>Plan</h3>
+          <p>Livsstil, henvisning til egen læge eller — hvis relevant — en lægeordineret behandling. Du får planen skriftligt.</p>
+          <span class="when mono">Efter samtalen</span>
+        </div>
+        <div class="step reveal">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M36 22 a14 14 0 1 1 -4 -10" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M33 4 v9 h-9" fill="none" stroke="var(--signal)" stroke-width="2.5"/></svg>
+          <div class="n">04</div>
+          <h3>Opfølgning</h3>
+          <p>Nye prøver med faste intervaller. Plan og eventuel behandling justeres efter, hvad tallene viser.</p>
+          <span class="when mono">Løbende</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DØGNKURVE -->
+  <section class="block">
+    <div class="wrap curve-wrap">
+      <div class="sec-head" style="margin:0;display:block">
+        <div class="num">03 / Hvorfor morgen?</div>
+      </div>
+      <div>
+        <h2 class="head" style="font-size:clamp(40px,7vw,80px);margin-bottom:16px">Dit niveau svinger<br>i løbet af dagen.</h2>
+        <p style="max-width:36em;color:var(--ink-2);font-size:19px;margin:0 0 28px">Testosteron er typisk højest om morgenen og falder hen over dagen. Derfor tager vi prøven tidligt — så tallene kan sammenlignes, fra prøve til prøve.</p>
+        <div class="curve-card" id="curve">
+          <svg viewBox="0 0 800 300" role="img" aria-label="Skematisk kurve: niveauet er højest om morgenen og falder mod aften">
+            <g stroke="var(--rule)" stroke-width="1">
+              <line x1="40" y1="40" x2="780" y2="40"/><line x1="40" y1="110" x2="780" y2="110"/>
+              <line x1="40" y1="180" x2="780" y2="180"/>
+            </g>
+            <line x1="40" y1="250" x2="780" y2="250" stroke="var(--ink)" stroke-width="2"/>
+            <line x1="40" y1="20" x2="40" y2="250" stroke="var(--ink)" stroke-width="2"/>
+            <!-- prøvevindue ca. kl. 7-10 -->
+            <rect x="256" y="20" width="93" height="230" fill="var(--signal)" opacity=".14"/>
+            <line x1="256" y1="20" x2="256" y2="250" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="349" y1="20" x2="349" y2="250" stroke="var(--signal)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <text x="263" y="36" class="curve-axis" style="fill:var(--signal);font-weight:600">PRØVEVINDUE</text>
+            <path class="curve-line" d="M40 140 C 120 120, 200 66, 280 60 S 400 90, 480 130 S 620 190, 680 192 S 750 170, 780 140"/>
+            <g class="curve-axis">
+              <text x="40" y="272" text-anchor="middle">00</text><text x="163" y="272" text-anchor="middle">04</text><text x="287" y="272" text-anchor="middle">08</text>
+              <text x="410" y="272" text-anchor="middle">12</text><text x="533" y="272" text-anchor="middle">16</text><text x="657" y="272" text-anchor="middle">20</text>
+              <text x="780" y="272" text-anchor="middle">24</text>
+              <text x="12" y="44" transform="rotate(-90 12 44)" text-anchor="end">NIVEAU</text>
+            </g>
+          </svg>
+          <div class="cap mono"><span>Skematisk — ingen skala</span><span>Kl.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCIPPER -->
+  <section class="block" id="principper">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="num">04 / Principper</div>
+        <div>
+          <h2 class="head">Det gør<br>vi ikke.</h2>
+          <p>Mænds sundhed er fyldt med løfter. Her er vores grænser — skrevet ned, så du kan holde os op på dem.</p>
+        </div>
+      </div>
+      <div class="rules">
+        <div class="rule"><div class="x">✕</div><div><h3>Ingen behandling uden blodprøver</h3><p>Symptomer alene er ikke nok. Vi måler først, og vi måler igen.</p></div></div>
+        <div class="rule"><div class="x">✕</div><div><h3>Ingen løfter om muskler eller ungdom</h3><p>Vi sælger ikke en krop. Vi hjælper dig med at forstå dine tal og dine muligheder.</p></div></div>
+        <div class="rule"><div class="x">✕</div><div><h3>Ingen algoritme bag recepten</h3><p>Alle vurderinger laves af en læge, som du kan stille spørgsmål til.</p></div></div>
+        <div class="rule"><div class="x">✕</div><div><h3>Ingen binding</h3><p>Du kan stoppe når som helst. Dine prøvesvar er dine og kan sendes til egen læge.</p></div></div>
+        <div class="rule"><div class="x">✕</div><div><h3>Ingen skjulte bivirkninger</h3><p>Risici og bivirkninger gennemgås før en eventuel behandling — ikke med småt bagefter.</p></div></div>
+        <div class="rule"><div class="x">✕</div><div><h3>Ingen omgåelse af egen læge</h3><p>Vi anbefaler, at din egen læge kender til forløbet, og hjælper med at dele svarene.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOLEKYLE -->
+  <section class="block" style="background:var(--paper-2)">
+    <div class="wrap molecule">
+      <svg viewBox="-14 -12 240 142" role="img" aria-label="Skeletformel inspireret af testosteronmolekylet">
+        <g class="mol-line">
+          <!-- ring A -->
+          <path d="M40 45 L66 60 L66 90 L40 105 L14 90 L14 60 Z"/>
+          <!-- ring B -->
+          <path d="M66 60 L92 45 L118 60 L118 90 L92 105 L66 90"/>
+          <!-- ring C -->
+          <path d="M92 45 L92 15 L118 0 L144 15 L144 45 L118 60"/>
+          <!-- ring D -->
+          <path d="M144 15 L172 6 L189 30 L172 54 L144 45"/>
+          <!-- methylgrupper -->
+          <path d="M66 60 L66 40"/>
+          <path d="M144 15 L144 -4"/>
+          <!-- dobbeltbinding i ring A -->
+          <path d="M20 86 L20 64"/>
+          <!-- =O og OH -->
+          <path d="M14 90 L4 98"/><path d="M17 93 L7 101"/>
+          <path d="M189 30 L208 30"/>
+        </g>
+        <text class="mol-text" x="-6" y="114">O</text>
+        <text class="mol-text" x="211" y="35">OH</text>
+        <text class="mol-text" x="150" y="122" style="fill:var(--ink-2);font-weight:500;font-size:11px">C₁₉H₂₈O₂</text>
+      </svg>
+      <blockquote>
+        Et hormon er ikke en livsstil. Det er et tal, der skal måles, forstås og følges — af en læge.
+        <footer class="mono">— Mandats grundprincip</footer>
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- PRISER -->
+  <section class="block" id="priser">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="num">05 / Priser</div>
+        <div>
+          <h2 class="head">Klare priser.</h2>
+          <p>Du betaler for prøver og lægetid — ikke for et abonnement, du ikke kan komme ud af. Priserne nedenfor er pladsholdere.</p>
+        </div>
+      </div>
+      <div class="prices">
+        <div class="price main">
+          <header><h3>Basistjek</h3><span class="mono">Start her</span></header>
+          <div class="amount">— kr.<small>Engangspris · pris følger</small></div>
+          <ul>
+            <li>Hormonpanel (morgenprøve)</li>
+            <li>Skriftligt svar med forklaring</li>
+            <li>Lægesamtale, 20 min.</li>
+          </ul>
+          <a class="btn" href="#">Bestil basistjek →</a>
+        </div>
+        <div class="price">
+          <header><h3>Udvidet</h3><span class="mono">Mere data</span></header>
+          <div class="amount">— kr.<small>Engangspris · pris følger</small></div>
+          <ul>
+            <li>Alt i Basistjek</li>
+            <li>Stofskifte, blodsukker, lipider</li>
+            <li>Lægesamtale, 40 min.</li>
+          </ul>
+          <a class="btn ghost" href="#">Bestil udvidet →</a>
+        </div>
+        <div class="price">
+          <header><h3>Opfølgning</h3><span class="mono">Ved forløb</span></header>
+          <div class="amount">— kr.<small>Pr. kontrol · pris følger</small></div>
+          <ul>
+            <li>Kontrolprøver efter lægens plan</li>
+            <li>Opfølgende lægesamtale</li>
+            <li>Ingen binding</li>
+          </ul>
+          <a class="btn ghost" href="#">Læs mere →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="block" id="faq">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="num">06 / Spørgsmål</div>
+        <div><h2 class="head">Det spørger<br>de fleste om.</h2></div>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Får jeg testosteron, hvis jeg bestiller?</summary>
+          <div class="ans"><p>Nej, ikke automatisk. Mange får at vide, at deres niveau er normalt, og at forklaringen skal findes et andet sted. Behandling er kun relevant, hvis gentagne målinger og lægens vurdering peger på det.</p></div>
+        </details>
+        <details>
+          <summary>Hvorfor skal prøven tages om morgenen?</summary>
+          <div class="ans"><p>Niveauet svinger i løbet af døgnet og er typisk højest om morgenen. En morgenprøve gør målingerne sammenlignelige. Lægen kan bede om en ekstra måling, før der konkluderes noget.</p></div>
+        </details>
+        <details>
+          <summary>Er der risici ved testosteronbehandling?</summary>
+          <div class="ans"><p>Ja. Behandling kan blandt andet påvirke blodprocent, prostata og fertilitet. Derfor gennemgår lægen risici med dig før en eventuel behandling, og derfor følges du med faste kontrolprøver.</p></div>
+        </details>
+        <details>
+          <summary>Skal min egen læge vide det?</summary>
+          <div class="ans"><p>Vi anbefaler det. Du ejer dine prøvesvar og kan til enhver tid få dem sendt til egen læge.</p></div>
+        </details>
+        <details>
+          <summary>Hvad hvis mine tal er normale?</summary>
+          <div class="ans"><p>Så er det også et svar. Lægen hjælper dig med, hvad der ellers kan ligge bag — fx søvn, stress, vægt eller medicin — og hvornår det giver mening at gå videre hos egen læge.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <h2 class="head">Stop med<br>at <em>gætte.</em></h2>
+      <p>Start med én blodprøve. Så ved du mere i næste uge, end du gør i dag.</p>
+      <a class="btn" href="#priser">Bestil blodprøve →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap cols">
+    <div><a class="logo" href="#"><b>Mandat</b></a></div>
+    <div>
+      <p>Mandat er et arbejdsnavn. Siden er et koncept og ikke et rigtigt tilbud — priser, forløb og indhold er pladsholdere.</p>
+      <p>Indholdet er generel information og erstatter ikke en individuel lægefaglig vurdering. Testosteronbehandling er receptpligtig.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Symptomtjek — tæller kun; giver bevidst ingen diagnose.
+  const boxes = document.querySelectorAll('#symptoms input');
+  const countEl = document.getElementById('count');
+  const textEl = document.getElementById('tally-text');
+  function updateTally(){
+    const n = [...boxes].filter(b => b.checked).length;
+    countEl.textContent = n;
+    textEl.textContent =
+      n === 0 ? 'Sæt kryds ud for de udsagn, der passer på dig.' :
+      n <= 2  ? 'Det kan være mange ting. En blodprøve kan udelukke eller bekræfte en hormonel årsag.' :
+                'Flere ting passer. Det er ikke en diagnose — men en god grund til at få målt.';
+  }
+  boxes.forEach(b => b.addEventListener('change', updateTally));
+
+  // Elementer toner frem, når de kommer i syne.
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting){ e.target.classList.add('seen'); io.unobserve(e.target); } });
+  }, { threshold:.25 });
+  document.querySelectorAll('.reveal, #curve').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
