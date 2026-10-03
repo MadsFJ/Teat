@@ -3,7 +3,7 @@
 Samling af små, selvstændige webapps — hver er én HTML-fil (eller en lille
 mappe med HTML/CSS/JS) uden build-trin, klar til GitHub Pages.
 
-## `mandat/` — Mandat (koncept)
+## `mandat.html` — Mandat (koncept)
 
 Landingsside-koncept til en startup inden for mænds hormonsundhed med
 fokus på testosteron. "Mandat" er et arbejdsnavn, og priser og forløb er
