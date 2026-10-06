@@ -8,7 +8,7 @@
           "pris": 139
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -20,7 +20,7 @@
           "pris": 189
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -32,7 +32,7 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -44,8 +44,8 @@
           "pris": 176
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
-      "fejl": null,
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
+      "fejl": "HTTP 403",
       "metode": "json-ld"
     },
     "https://www.depot-odense.dk/spiritus/linie-akvavit-70-cl-flaske/": {
@@ -56,7 +56,7 @@
           "pris": 171.88
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -68,7 +68,7 @@
           "pris": 179
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -80,12 +80,12 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-10-05T22:02:23.554Z",
+      "sidstTjekket": "2026-10-06T12:03:25.586Z",
       "fejl": null,
       "metode": "json-ld"
     }
   },
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
-  "opdateret": "2026-10-05T22:02:23.554Z"
+  "opdateret": "2026-10-06T12:03:25.586Z"
 }
