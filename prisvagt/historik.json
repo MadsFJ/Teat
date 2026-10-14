@@ -8,7 +8,7 @@
           "pris": 139
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -20,7 +20,7 @@
           "pris": 189
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -32,7 +32,7 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -44,7 +44,7 @@
           "pris": 176
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
       "fejl": "HTTP 403",
       "metode": "json-ld"
     },
@@ -56,8 +56,8 @@
           "pris": 171.88
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
-      "fejl": null,
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
+      "fejl": "Timeout",
       "metode": "json-ld"
     },
     "https://slagelsevinkompagni.dk/snaps-akvavit-139/linie-aquavit-41-5-70-cl-p2140": {
@@ -68,7 +68,7 @@
           "pris": 179
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -80,12 +80,12 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-10-13T20:42:04.086Z",
-      "fejl": null,
+      "sidstTjekket": "2026-10-14T10:16:10.472Z",
+      "fejl": "Kunne ikke finde en pris på siden",
       "metode": "json-ld"
     }
   },
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
-  "opdateret": "2026-10-13T20:42:04.086Z"
+  "opdateret": "2026-10-14T10:16:10.472Z"
 }
