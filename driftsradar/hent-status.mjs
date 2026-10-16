@@ -21,7 +21,16 @@ function urlFor(svc) {
   return null;
 }
 
-async function fetchOne(url) {
+// Afvis svar siden alligevel ikke kan bruge (fx en HTML-fejlside med status 200).
+function validate(svc, body) {
+  if (svc.statusType === 'statuspage') {
+    try { if (JSON.parse(body).status) return null; } catch { /* falder igennem */ }
+    return 'Svaret er ikke et Statuspage-API';
+  }
+  return /<(rss|feed|channel)[\s>]/i.test(body) ? null : 'Svaret er ikke et RSS/Atom-feed';
+}
+
+async function fetchOne(url, svc) {
   const fetched = new Date().toISOString();
   try {
     const res = await fetch(url, {
@@ -34,6 +43,8 @@ async function fetchOne(url) {
     if (!res.ok) return { ok: false, error: 'HTTP ' + res.status, fetched };
     const body = await res.text();
     if (body.length > MAX_BYTES) return { ok: false, error: 'Svaret er for stort', fetched };
+    const invalid = validate(svc, body);
+    if (invalid) return { ok: false, error: invalid, fetched };
     return { ok: true, body, fetched };
   } catch (e) {
     return { ok: false, error: e.name === 'TimeoutError' ? 'Timeout' : e.message, fetched };
@@ -42,10 +53,12 @@ async function fetchOne(url) {
 
 const data = JSON.parse(await readFile(path.join(here, 'services.json'), 'utf8'));
 const services = Array.isArray(data) ? data : data.services;
-const urls = [...new Set(services.map(urlFor).filter(Boolean))];
+const byUrl = new Map();
+for (const svc of services) { const url = urlFor(svc); if (url && !byUrl.has(url)) byUrl.set(url, svc); }
+const urls = [...byUrl.keys()];
 
 const results = {};
-await Promise.all(urls.map(async url => { results[url] = await fetchOne(url); }));
+await Promise.all(urls.map(async url => { results[url] = await fetchOne(url, byUrl.get(url)); }));
 
 await writeFile(outFile, JSON.stringify({ generated: new Date().toISOString(), results }));
 for (const url of urls) console.log(results[url].ok ? 'OK  ' : 'FEJL', url, results[url].error || '');
