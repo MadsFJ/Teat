@@ -90,6 +90,26 @@ projektstruktur og hvordan den er bygget. Kør den lokalt med fx
 `python3 -m http.server 8080` fra `dart501/`-mappen (kræver en
 http-server pga. ES-moduler — kan ikke åbnes direkte som `file://`).
 
+## `skomar.html` — Skomar-tæller
+
+Pointtæller til skomar (skomager), keglebillard-varianten fra
+værtshusene. Lavet til at ligge ved siden af bordet på en telefon:
+
+- to spillere eller hold, sæt til 40/50/60/70 (eller valgfrit) og
+  1 sæt eller bedst af 3/5,
+- byg hvert stød op med store knapper — kegle (2), kongen alene (6),
+  alle 5 kegler (16), rødt (4), blegt (4), hvid i hul (2) — og giv
+  pointene til skytten, eller som **skæve** til modstanderen,
+- turen skifter automatisk efter hvert stød (tryk på en spiller for at
+  rette turen), og den viser, hvor meget hver spiller mangler,
+- fortryd ubegrænset tilbage, historik pr. sæt, og spillet gemmes i
+  browserens `localStorage`, så det overlever en genindlæsning,
+- holder skærmen tændt under spillet, hvor browseren understøtter det.
+
+Pointværdierne følger de regler, der gengives af DDBU og TV 2. Husregler
+varierer fra sted til sted, især hvad der giver skæve, så aftal dem
+inden I starter.
+
 ## `pladelog.html` — Pladelog
 
 Webversion af Android-appen "Pladelog" (nummerplade-scanner). Peg

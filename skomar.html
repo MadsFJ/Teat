@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2a">
+<title>Skomar-tæller</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#eef3ef;
+    --surface:#ffffff;
+    --surface-2:#e4ece6;
+    --border:#cfdbd2;
+    --text:#0e1a14;
+    --text-muted:#52645a;
+    --felt:#0f7a4a;
+    --felt-contrast:#ffffff;
+    --red:#c62828;
+    --red-contrast:#ffffff;
+    --gold:#a86a09;
+    --font-display:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-body:'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#08110d;
+      --surface:#0f1c16;
+      --surface-2:#15261e;
+      --border:#23382d;
+      --text:#e8f3ed;
+      --text-muted:#8aa596;
+      --felt:#3ddc84;
+      --felt-contrast:#04210f;
+      --red:#ff6b60;
+      --red-contrast:#2a0503;
+      --gold:#f6ad3c;
+    }
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ margin:0; background:var(--bg); overscroll-behavior:none; }
+  body{
+    min-height:100vh; min-height:100dvh;
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  button{ font:inherit; color:inherit; cursor:pointer; touch-action:manipulation; }
+  button:disabled{ opacity:.38; cursor:default; }
+  .app{
+    max-width:540px; margin:0 auto;
+    padding:max(14px, env(safe-area-inset-top)) 14px max(24px, env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; gap:14px;
+  }
+
+  header{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  header h1{
+    margin:0; font-family:var(--font-display); font-size:20px; letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .ball{ width:14px; height:14px; border-radius:50%; background:var(--red); box-shadow: inset -3px -3px 0 rgba(0,0,0,.18); }
+  .hdr-btns{ display:flex; gap:6px; }
+  .ghost{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; font-size:14px; font-weight:600;
+  }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; }
+  .label{ font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin:0 0 8px; }
+
+  /* Opsætning */
+  .setup{ display:flex; flex-direction:column; gap:14px; }
+  .names{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  input[type=text], input[type=number]{
+    width:100%; font:inherit; font-size:17px; color:var(--text);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px;
+  }
+  input:focus{ outline:2px solid var(--felt); outline-offset:1px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .chip{
+    min-width:56px; padding:10px 14px; border-radius:999px; font-weight:600;
+    background:var(--surface-2); border:1px solid var(--border);
+  }
+  .chip[aria-pressed="true"]{ background:var(--felt); color:var(--felt-contrast); border-color:var(--felt); }
+  .chips input[type=number]{ width:96px; padding:10px 12px; }
+  .hint{ font-size:13px; color:var(--text-muted); margin:8px 0 0; }
+  .primary{
+    width:100%; padding:16px; border:none; border-radius:14px;
+    background:var(--felt); color:var(--felt-contrast); font-size:18px; font-weight:700;
+  }
+
+  /* Scoretavle */
+  .board{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .player{
+    position:relative; text-align:left; border-radius:16px; padding:12px 14px 14px;
+    background:var(--surface); border:2px solid var(--border);
+    display:flex; flex-direction:column; gap:2px; min-width:0;
+  }
+  .player.active{ border-color:var(--felt); box-shadow:0 0 0 3px color-mix(in srgb, var(--felt) 22%, transparent); }
+  .player .pname{ font-weight:700; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .player.has-sets .pname{ padding-right:44px; }
+  .player .turn{ font-size:12px; font-weight:700; color:var(--felt); min-height:16px; }
+  .player .score{ font-family:var(--font-display); font-size:clamp(48px, 16vw, 72px); font-weight:700; line-height:1; letter-spacing:-.02em; }
+  .player .left{ font-size:13px; color:var(--text-muted); }
+  .bar{ height:6px; border-radius:999px; background:var(--surface-2); overflow:hidden; margin-top:6px; }
+  .bar > i{ display:block; height:100%; background:var(--felt); border-radius:999px; transition:width .25s; }
+  .sets{ position:absolute; top:12px; right:12px; display:flex; gap:3px; }
+  .sets i{ width:9px; height:9px; border-radius:50%; border:1.5px solid var(--text-muted); }
+  .sets i.won{ background:var(--gold); border-color:var(--gold); }
+  .meta{ display:flex; flex-wrap:wrap; gap:2px 12px; justify-content:space-between; font-size:13px; color:var(--text-muted); padding:0 4px; }
+
+  /* Stød */
+  .shot{ display:flex; flex-direction:column; gap:12px; }
+  .shot-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  .shot-head .who{ font-weight:700; font-size:15px; }
+  .shot-total{ font-family:var(--font-display); font-size:34px; font-weight:700; }
+  .picked{ display:flex; flex-wrap:wrap; gap:6px; min-height:34px; align-items:center; }
+  .picked .empty{ font-size:14px; color:var(--text-muted); }
+  .pchip{
+    border:none; border-radius:999px; padding:6px 10px; font-size:14px; font-weight:600;
+    background:var(--surface-2);
+  }
+  .pchip::after{ content:" ×"; color:var(--text-muted); }
+  .events{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .ev{
+    border-radius:14px; border:1px solid var(--border); background:var(--surface-2);
+    padding:12px 6px; min-height:78px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  }
+  .ev:active{ transform:scale(.97); }
+  .ev b{ font-family:var(--font-display); font-size:22px; }
+  .ev span{ font-size:14px; font-weight:600; line-height:1.15; text-align:center; }
+  .ev small{ font-size:11px; color:var(--text-muted); text-align:center; line-height:1.2; }
+  .ev.gold b{ color:var(--gold); }
+  .commit{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .commit button{
+    border:none; border-radius:14px; padding:14px 10px; font-size:16px; font-weight:700; line-height:1.2;
+  }
+  .give{ background:var(--felt); color:var(--felt-contrast); grid-column:1 / -1; font-size:18px !important; padding:16px 10px !important; }
+  .skaeve{ background:var(--red); color:var(--red-contrast); }
+  .miss{ background:var(--surface-2); border:1px solid var(--border) !important; }
+  .commit small{ display:block; font-size:12px; font-weight:500; opacity:.85; }
+
+  .tools{ display:flex; gap:8px; }
+  .tools .ghost{ flex:1; padding:12px; }
+
+  /* Historik */
+  details summary{ cursor:pointer; font-weight:600; list-style:none; display:flex; justify-content:space-between; }
+  details summary::-webkit-details-marker{ display:none; }
+  details summary::after{ content:"▾"; color:var(--text-muted); }
+  details[open] summary::after{ content:"▴"; }
+  .log{ list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:280px; overflow:auto; }
+  .log li{ display:flex; justify-content:space-between; gap:10px; font-size:14px; padding:6px 0; border-bottom:1px dashed var(--border); }
+  .log li .d{ color:var(--text-muted); }
+  .log li .p{ font-family:var(--font-display); font-weight:700; white-space:nowrap; }
+  .log li.sk .p{ color:var(--red); }
+
+  /* Overlays */
+  .overlay{
+    position:fixed; inset:0; z-index:10; display:none; align-items:center; justify-content:center;
+    padding:20px; background:rgba(4,12,8,.72); backdrop-filter:blur(3px);
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    width:100%; max-width:440px; max-height:90vh; overflow:auto;
+    background:var(--surface); border-radius:20px; padding:22px; border:1px solid var(--border);
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .modal h2{ margin:0; font-size:24px; }
+  .modal .big{ font-family:var(--font-display); font-size:44px; font-weight:700; text-align:center; }
+  .modal .stack{ display:flex; flex-direction:column; gap:8px; }
+  .rules{ width:100%; border-collapse:collapse; font-size:15px; }
+  .rules td{ padding:7px 0; border-bottom:1px solid var(--border); vertical-align:top; }
+  .rules td:last-child{ text-align:right; font-family:var(--font-display); font-weight:700; white-space:nowrap; padding-left:12px; }
+  .modal p{ margin:0; font-size:14px; line-height:1.45; color:var(--text-muted); }
+  .modal p strong{ color:var(--text); }
+
+  .toast{
+    position:fixed; left:50%; bottom:max(18px, env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px);
+    background:var(--text); color:var(--bg); padding:10px 16px; border-radius:999px; font-weight:600; font-size:14px;
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:20; white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1><span class="ball" aria-hidden="true"></span>Skomar</h1>
+    <div class="hdr-btns">
+      <button class="ghost" data-action="rules">Regler</button>
+      <button class="ghost" data-action="new" id="btnNew" hidden>Nyt spil</button>
+    </div>
+  </header>
+
+  <!-- Opsætning -->
+  <section id="setup" class="setup">
+    <div class="card">
+      <p class="label">Spillere / hold</p>
+      <div class="names">
+        <input type="text" id="name0" maxlength="20" placeholder="Spiller 1" autocomplete="off">
+        <input type="text" id="name1" maxlength="20" placeholder="Spiller 2" autocomplete="off">
+      </div>
+    </div>
+    <div class="card">
+      <p class="label">Sæt spilles til</p>
+      <div class="chips" id="targetChips">
+        <button class="chip" data-target="40">40</button>
+        <button class="chip" data-target="50">50</button>
+        <button class="chip" data-target="60">60</button>
+        <button class="chip" data-target="70">70</button>
+        <input type="number" id="targetCustom" min="2" max="999" step="2" inputmode="numeric" placeholder="Andet">
+      </div>
+      <p class="hint">Turneringer spilles typisk til 70. Spiller I "ned fra 60", så vælg 60 — tavlen viser altid, hvor meget der mangler.</p>
+    </div>
+    <div class="card">
+      <p class="label">Kamp</p>
+      <div class="chips" id="bestOfChips">
+        <button class="chip" data-bestof="1">1 sæt</button>
+        <button class="chip" data-bestof="3">Bedst af 3</button>
+        <button class="chip" data-bestof="5">Bedst af 5</button>
+      </div>
+    </div>
+    <button class="primary" data-action="start">Start spil</button>
+  </section>
+
+  <!-- Spil -->
+  <section id="game" hidden>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="board" id="board"></div>
+      <div class="meta"><span id="setInfo"></span><span>Tryk på en spiller for at skifte tur</span></div>
+
+      <div class="card shot">
+        <div class="shot-head">
+          <span class="who" id="shotWho"></span>
+          <span class="shot-total" id="shotTotal">0</span>
+        </div>
+        <div class="picked" id="picked"></div>
+        <div class="events" id="events"></div>
+        <div class="commit">
+          <button class="give" data-action="give" id="btnGive"></button>
+          <button class="miss" data-action="miss" id="btnMiss">Bom / 0<small>Næste spiller</small></button>
+          <button class="skaeve" data-action="skaeve" id="btnSkaeve"></button>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button class="ghost" data-action="undo" id="btnUndo">↶ Fortryd</button>
+      </div>
+
+      <details class="card" id="history">
+        <summary id="historyTitle">Historik</summary>
+        <ul class="log" id="log"></ul>
+      </details>
+    </div>
+  </section>
+</div>
+
+<!-- Sæt/kamp vundet -->
+<div class="overlay" id="winOverlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2 id="winTitle"></h2>
+    <div class="big" id="winScore"></div>
+    <p id="winText" style="text-align:center"></p>
+    <div class="stack" id="winButtons"></div>
+  </div>
+</div>
+
+<!-- Regler -->
+<div class="overlay" id="rulesOverlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Point i skomar</h2>
+    <table class="rules">
+      <tr><td>Kegle væltet (pr. kegle)</td><td>2</td></tr>
+      <tr><td>Kongen (midterkeglen) væltet alene<br><small>kun når alle 5 kegler står</small></td><td>6</td></tr>
+      <tr><td>Alle 5 kegler af samme bal i ét gennemløb</td><td>16</td></tr>
+      <tr><td>Rødt — rød bal rammer begge hvide</td><td>4</td></tr>
+      <tr><td>Blegt — de to hvide baller rammer hinanden</td><td>4</td></tr>
+      <tr><td>Hvid bal i hul (eller over bord)</td><td>2</td></tr>
+    </table>
+    <p><strong>Skæve:</strong> Ved fejl (fx rød bal i hul, eller ingen bande) går stødets point til modstanderen. Byg stødet op som normalt og tryk på "Skæve".</p>
+    <p><strong>Tur:</strong> Spillerne skifter efter hvert stød. Første spiller, der når målet, vinder sættet.</p>
+    <p>Pointtallene er samlet fra bl.a. DDBU's turneringsregler og TV 2's regelforklaring. Husregler varierer fra bar til bar — især hvad der giver skæve, og hvor mange — så aftal dem inden I starter.</p>
+    <button class="primary" data-action="closeRules">OK</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const EVENTS = [
+    { id:'kegle', label:'Kegle',        sub:'pr. kegle',        pts:2 },
+    { id:'konge', label:'Kongen alene', sub:'midterkeglen',     pts:6,  gold:true },
+    { id:'alle5', label:'Alle 5',       sub:'samme bal',        pts:16, gold:true },
+    { id:'roedt', label:'Rødt',         sub:'rød rammer begge hvide', pts:4 },
+    { id:'blegt', label:'Blegt',        sub:'hvid rammer hvid', pts:4 },
+    { id:'hul',   label:'Hvid i hul',   sub:'eller over bord',  pts:2 },
+  ];
+  const EV = Object.fromEntries(EVENTS.map(e => [e.id, e]));
+
+  const STATE_KEY = 'skomar.state.v1';
+  const SETTINGS_KEY = 'skomar.settings.v1';
+  const MAX_UNDO = 200;
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  let game = null;   // aktivt spil
+  let undo = [];     // snapshots (JSON) før hver handling
+  let settings = loadJSON(SETTINGS_KEY) || { names:['', ''], target:70, bestOf:1 };
+
+  function loadJSON(key){
+    try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+  }
+  function saveJSON(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* fx privat browsing */ }
+  }
+  function persist(){ saveJSON(STATE_KEY, game ? { game, undo } : null); }
+
+  /* ---------- Opsætning ---------- */
+  function fillNames(){
+    $('name0').value = settings.names[0] || '';
+    $('name1').value = settings.names[1] || '';
+  }
+  function renderSetup(){
+    const preset = [40,50,60,70].includes(settings.target);
+    document.querySelectorAll('[data-target]').forEach(b =>
+      b.setAttribute('aria-pressed', String(preset && +b.dataset.target === settings.target)));
+    $('targetCustom').value = preset ? '' : settings.target;
+    document.querySelectorAll('[data-bestof]').forEach(b =>
+      b.setAttribute('aria-pressed', String(+b.dataset.bestof === settings.bestOf)));
+  }
+
+  $('targetChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-target]'); if (!b) return;
+    settings.target = +b.dataset.target; renderSetup();
+  });
+  $('targetCustom').addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    if (v > 0) {
+      settings.target = v;
+      document.querySelectorAll('[data-target]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    }
+  });
+  $('bestOfChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-bestof]'); if (!b) return;
+    settings.bestOf = +b.dataset.bestof; renderSetup();
+  });
+
+  function startGame(){
+    const names = [ $('name0').value.trim(), $('name1').value.trim() ];
+    settings.names = names;
+    if (!(settings.target > 0)) settings.target = 70;
+    saveJSON(SETTINGS_KEY, settings);
+    game = {
+      names: [names[0] || 'Spiller 1', names[1] || 'Spiller 2'],
+      target: settings.target,
+      bestOf: settings.bestOf,
+      setsWon: [0, 0],
+      setNo: 1,
+      scores: [0, 0],
+      starter: 0,
+      turn: 0,
+      pending: [],
+      log: [],
+      setOver: null,   // index på sætvinder, mens overlay vises
+      matchOver: false,
+    };
+    undo = [];
+    persist();
+    show('game');
+    requestWakeLock();
+  }
+
+  /* ---------- Spil ---------- */
+  const other = i => 1 - i;
+  const shotTotal = () => game.pending.reduce((s, id) => s + EV[id].pts, 0);
+  const setsToWin = () => Math.ceil(game.bestOf / 2);
+
+  function snapshot(){
+    undo.push(JSON.stringify(game));
+    if (undo.length > MAX_UNDO) undo.shift();
+  }
+
+  function addEvent(id){
+    if (game.setOver !== null) return;
+    game.pending.push(id);
+    buzz(10);
+    persist(); render();
+  }
+  function removePending(i){
+    game.pending.splice(i, 1);
+    persist(); render();
+  }
+
+  function commit(kind){
+    if (game.setOver !== null) return;
+    const pts = kind === 'miss' ? 0 : shotTotal();
+    if (kind !== 'miss' && pts <= 0) return;
+    snapshot();
+    const shooter = game.turn;
+    const to = kind === 'skaeve' ? other(shooter) : shooter;
+    game.scores[to] += pts;
+    game.log.push({ set: game.setNo, shooter, to, pts, kind, events: kind === 'miss' ? [] : game.pending.slice() });
+    game.pending = [];
+    game.turn = other(shooter);
+
+    if (pts > 0) {
+      if (kind === 'skaeve') toast(`Skæve! +${pts} til ${game.names[to]}`);
+      else toast(`+${pts} til ${game.names[to]}`);
+    }
+    buzz(kind === 'skaeve' ? [40, 60, 40] : 25);
+
+    if (game.scores[to] >= game.target) {
+      game.setsWon[to] += 1;
+      game.setOver = to;
+      game.matchOver = game.setsWon[to] >= setsToWin();
+      buzz([200, 100, 200, 100, 300]);
+    }
+    persist(); render();
+  }
+
+  function nextSet(){
+    snapshot();
+    game.setNo += 1;
+    game.scores = [0, 0];
+    game.starter = other(game.starter);
+    game.turn = game.starter;
+    game.pending = [];
+    game.setOver = null;
+    persist(); render();
+  }
+
+  function rematch(){
+    snapshot();
+    game.setsWon = [0, 0];
+    game.setNo = 1;
+    game.scores = [0, 0];
+    game.starter = other(game.starter);
+    game.turn = game.starter;
+    game.pending = [];
+    game.log = [];
+    game.setOver = null;
+    game.matchOver = false;
+    persist(); render();
+  }
+
+  function doUndo(){
+    if (game.pending.length && game.setOver === null) {
+      game.pending.pop();
+    } else if (undo.length) {
+      game = JSON.parse(undo.pop());
+      toast('Fortrudt');
+    } else {
+      return;
+    }
+    persist(); render();
+  }
+
+  function setTurn(i){
+    if (game.setOver !== null || game.turn === i) return;
+    game.turn = i;
+    persist(); render();
+  }
+
+  function describe(entry){
+    if (entry.kind === 'miss') return 'Bom';
+    const counts = {};
+    entry.events.forEach(id => counts[id] = (counts[id] || 0) + 1);
+    return Object.entries(counts).map(([id, n]) => (n > 1 ? n + '× ' : '') + EV[id].label).join(', ');
+  }
+
+  function render(){
+    if (!game) return;
+    const t = game.turn;
+
+    // Scoretavle
+    $('board').innerHTML = game.names.map((name, i) => {
+      const score = game.scores[i];
+      const left = Math.max(0, game.target - score);
+      const pct = Math.min(100, score / game.target * 100);
+      const dots = game.bestOf > 1
+        ? `<span class="sets" aria-label="${game.setsWon[i]} sæt vundet">${
+            Array.from({length: setsToWin()}, (_, k) => `<i class="${k < game.setsWon[i] ? 'won' : ''}"></i>`).join('')
+          }</span>` : '';
+      return `<button class="player ${i === t && game.setOver === null ? 'active' : ''} ${game.bestOf > 1 ? 'has-sets' : ''}" data-action="turn" data-i="${i}">
+        ${dots}
+        <span class="pname">${esc(name)}</span>
+        <span class="turn">${i === t && game.setOver === null ? '● Til stød' : ''}</span>
+        <span class="score">${score}</span>
+        <span class="left">${left > 0 ? `mangler ${left}` : 'i mål!'}</span>
+        <span class="bar"><i style="width:${pct}%"></i></span>
+      </button>`;
+    }).join('');
+
+    $('setInfo').textContent = game.bestOf > 1
+      ? `Sæt ${game.setNo} · til ${game.target} · bedst af ${game.bestOf}`
+      : `Til ${game.target} point`;
+
+    // Stød
+    const total = shotTotal();
+    $('shotWho').textContent = `Stød: ${game.names[t]}`;
+    $('shotTotal').textContent = total;
+    $('picked').innerHTML = game.pending.length
+      ? game.pending.map((id, i) => `<button class="pchip" data-action="unpick" data-i="${i}" aria-label="Fjern ${esc(EV[id].label)}">${esc(EV[id].label)} +${EV[id].pts}</button>`).join('')
+      : '<span class="empty">Tryk på det, der skete i stødet …</span>';
+
+    $('btnGive').innerHTML = total > 0
+      ? `✓ Giv ${total} point<small>til ${esc(game.names[t])}</small>`
+      : `✓ Giv point<small>vælg først hvad der skete</small>`;
+    $('btnGive').disabled = total <= 0;
+    $('btnSkaeve').innerHTML = `⚠ Skæve${total > 0 ? ' ' + total : ''}<small>til ${esc(game.names[other(t)])}</small>`;
+    $('btnSkaeve').disabled = total <= 0;
+    $('btnMiss').disabled = total > 0;
+    $('btnUndo').disabled = !game.pending.length && !undo.length;
+
+    // Historik
+    const setLog = game.log.filter(e => e.set === game.setNo);
+    $('historyTitle').textContent = `Historik · sæt ${game.setNo} (${setLog.length} stød)`;
+    $('log').innerHTML = setLog.slice().reverse().map(e => {
+      const sk = e.kind === 'skaeve';
+      const who = sk
+        ? `${esc(game.names[e.shooter])} → skæve til ${esc(game.names[e.to])}`
+        : esc(game.names[e.shooter]);
+      return `<li class="${sk ? 'sk' : ''}"><span>${who}<br><span class="d">${esc(describe(e))}</span></span><span class="p">${e.pts ? '+' + e.pts : '0'}</span></li>`;
+    }).join('') || '<li><span class="d">Ingen stød endnu</span></li>';
+
+    renderWin();
+  }
+
+  function renderWin(){
+    const ov = $('winOverlay');
+    if (game.setOver === null) { ov.classList.remove('show'); return; }
+    const w = game.setOver;
+    const nm = esc(game.names[w]);
+    if (game.matchOver) {
+      $('winTitle').innerHTML = `🏆 ${nm} vinder${game.bestOf > 1 ? ' kampen' : ''}!`;
+      $('winScore').textContent = game.bestOf > 1
+        ? `${game.setsWon[0]} – ${game.setsWon[1]}`
+        : `${game.scores[0]} – ${game.scores[1]}`;
+      $('winText').textContent = game.bestOf > 1
+        ? `Sidste sæt: ${game.scores[0]} – ${game.scores[1]}`
+        : `${game.names[0]} – ${game.names[1]}`;
+      $('winButtons').innerHTML = `
+        <button class="primary" data-action="rematch">Revanche</button>
+        <button class="ghost" data-action="undo">↶ Fortryd sidste stød</button>
+        <button class="ghost" data-action="setupFromWin">Nye spillere / indstillinger</button>`;
+    } else {
+      $('winTitle').innerHTML = `${nm} vinder sæt ${game.setNo}!`;
+      $('winScore').textContent = `${game.scores[0]} – ${game.scores[1]}`;
+      $('winText').textContent = `Stilling i sæt: ${game.names[0]} ${game.setsWon[0]} – ${game.setsWon[1]} ${game.names[1]}`;
+      $('winButtons').innerHTML = `
+        <button class="primary" data-action="nextSet">Næste sæt</button>
+        <button class="ghost" data-action="undo">↶ Fortryd sidste stød</button>`;
+    }
+    ov.classList.add('show');
+  }
+
+  function renderEvents(){
+    $('events').innerHTML = EVENTS.map(e =>
+      `<button class="ev ${e.gold ? 'gold' : ''}" data-action="ev" data-id="${e.id}">
+        <b>+${e.pts}</b><span>${esc(e.label)}</span><small>${esc(e.sub)}</small>
+      </button>`).join('');
+  }
+
+  /* ---------- Navigation ---------- */
+  function show(view){
+    $('setup').hidden = view !== 'setup';
+    $('game').hidden = view !== 'game';
+    $('btnNew').hidden = view !== 'game';
+    if (view === 'setup') { $('winOverlay').classList.remove('show'); fillNames(); renderSetup(); }
+    else render();
+  }
+
+  function goToSetup(){
+    if (game) {
+      settings.names = game.names.slice();
+      settings.target = game.target;
+      settings.bestOf = game.bestOf;
+    }
+    game = null; undo = [];
+    persist();
+    show('setup');
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-action]'); if (!b || b.disabled) return;
+    switch (b.dataset.action) {
+      case 'start': startGame(); break;
+      case 'ev': addEvent(b.dataset.id); break;
+      case 'unpick': removePending(+b.dataset.i); break;
+      case 'give': commit('point'); break;
+      case 'skaeve': commit('skaeve'); break;
+      case 'miss': commit('miss'); break;
+      case 'undo': doUndo(); break;
+      case 'turn': setTurn(+b.dataset.i); break;
+      case 'nextSet': nextSet(); break;
+      case 'rematch': rematch(); break;
+      case 'setupFromWin': goToSetup(); break;
+      case 'new':
+        if (!game.log.length || confirm('Afslut det nuværende spil og start forfra?')) goToSetup();
+        break;
+      case 'rules': $('rulesOverlay').classList.add('show'); break;
+      case 'closeRules': $('rulesOverlay').classList.remove('show'); break;
+    }
+  });
+  $('rulesOverlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+  });
+
+  /* ---------- Småting ---------- */
+  let toastTimer;
+  function toast(msg){
+    const el = $('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 1400);
+  }
+  function buzz(p){ try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+
+  // Hold skærmen tændt, mens der spilles (hvis browseren understøtter det)
+  let wakeLock = null;
+  async function requestWakeLock(){
+    try {
+      if ('wakeLock' in navigator && game && !wakeLock) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      }
+    } catch (e) { /* ikke kritisk */ }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  /* ---------- Start ---------- */
+  renderEvents();
+  const saved = loadJSON(STATE_KEY);
+  if (saved && saved.game) {
+    game = saved.game; undo = Array.isArray(saved.undo) ? saved.undo : [];
+    show('game');
+    requestWakeLock();
+  } else {
+    show('setup');
+  }
+})();
+</script>
+</body>
+</html>
