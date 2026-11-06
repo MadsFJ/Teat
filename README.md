@@ -100,6 +100,8 @@ værtshusene. Lavet til at ligge ved siden af bordet på en telefon:
 - byg hvert stød op med store knapper — kegle (2), kongen alene (6),
   alle 5 kegler (16), rødt (4), blegt (4), hvid i hul (2) — og giv
   pointene til skytten, eller som **skæve** til modstanderen,
+- **rød i hul** giver minuspoint til skytten (antallet vælges ved start,
+  standard −6), så scoren kan gå under 0,
 - turen skifter automatisk efter hvert stød (tryk på en spiller for at
   rette turen), og den viser, hvor meget hver spiller mangler,
 - fortryd ubegrænset tilbage, historik pr. sæt, og spillet gemmes i

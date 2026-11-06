@@ -134,6 +134,21 @@
   .ev span{ font-size:14px; font-weight:600; line-height:1.15; text-align:center; }
   .ev small{ font-size:11px; color:var(--text-muted); text-align:center; line-height:1.2; }
   .ev.gold b{ color:var(--gold); }
+  .ev-red{
+    width:100%; border-radius:14px; padding:12px 14px; min-height:56px;
+    display:flex; align-items:center; gap:12px; text-align:left;
+    background:color-mix(in srgb, var(--red) 10%, var(--surface-2));
+    border:1px solid color-mix(in srgb, var(--red) 45%, var(--border));
+  }
+  .ev-red:active{ transform:scale(.99); }
+  .ev-red[aria-pressed="true"]{ background:var(--red); color:var(--red-contrast); border-color:var(--red); }
+  .ev-red .ball{ width:22px; height:22px; flex:none; }
+  .ev-red[aria-pressed="true"] .ball{ background:var(--red-contrast); }
+  .ev-red span{ flex:1; font-weight:700; font-size:16px; line-height:1.2; }
+  .ev-red span small{ display:block; font-weight:500; font-size:12px; opacity:.8; }
+  .ev-red b{ font-family:var(--font-display); font-size:22px; }
+  .shot-total.neg, .player .score.neg{ color:var(--red); }
+  .give.minus{ background:var(--red); color:var(--red-contrast); }
   .commit{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .commit button{
     border:none; border-radius:14px; padding:14px 10px; font-size:16px; font-weight:700; line-height:1.2;
@@ -224,6 +239,16 @@
         <button class="chip" data-bestof="5">Bedst af 5</button>
       </div>
     </div>
+    <div class="card">
+      <p class="label">Rød i hul giver minus</p>
+      <div class="chips" id="redChips">
+        <button class="chip" data-red="2">−2</button>
+        <button class="chip" data-red="4">−4</button>
+        <button class="chip" data-red="6">−6</button>
+        <input type="number" id="redCustom" min="1" max="99" inputmode="numeric" placeholder="Andet">
+      </div>
+      <p class="hint">Så mange point trækkes fra den, der skyder den røde i hul. Sæt det efter jeres husregler.</p>
+    </div>
     <button class="primary" data-action="start">Start spil</button>
   </section>
 
@@ -240,6 +265,7 @@
         </div>
         <div class="picked" id="picked"></div>
         <div class="events" id="events"></div>
+        <button class="ev-red" data-action="red" id="btnRed" aria-pressed="false"></button>
         <div class="commit">
           <button class="give" data-action="give" id="btnGive"></button>
           <button class="miss" data-action="miss" id="btnMiss">Bom / 0<small>Næste spiller</small></button>
@@ -280,8 +306,10 @@
       <tr><td>Rødt — rød bal rammer begge hvide</td><td>4</td></tr>
       <tr><td>Blegt — de to hvide baller rammer hinanden</td><td>4</td></tr>
       <tr><td>Hvid bal i hul (eller over bord)</td><td>2</td></tr>
+      <tr><td>Rød bal i hul — trækkes fra skytten<br><small>vælges ved start af spillet</small></td><td id="rulesRed">−6</td></tr>
     </table>
-    <p><strong>Skæve:</strong> Ved fejl (fx rød bal i hul, eller ingen bande) går stødets point til modstanderen. Byg stødet op som normalt og tryk på "Skæve".</p>
+    <p><strong>Rød i hul:</strong> Tryk på den røde knap — så bliver stødet til minus for skytten, og scoren kan godt gå under 0. Andre point i samme stød trækkes også fra.</p>
+    <p><strong>Skæve:</strong> Ved andre fejl (fx ingen bande) går stødets point til modstanderen. Byg stødet op som normalt og tryk på "Skæve".</p>
     <p><strong>Tur:</strong> Spillerne skifter efter hvert stød. Første spiller, der når målet, vinder sættet.</p>
     <p>Pointtallene er samlet fra bl.a. DDBU's turneringsregler og TV 2's regelforklaring. Husregler varierer fra bar til bar — især hvad der giver skæve, og hvor mange — så aftal dem inden I starter.</p>
     <button class="primary" data-action="closeRules">OK</button>
@@ -315,6 +343,9 @@
     { id:'hul',   label:'Hvid i hul',   sub:'eller over bord',  pts:2 },
   ];
   const EV = Object.fromEntries(EVENTS.map(e => [e.id, e]));
+  EV.roed = { id:'roed', label:'Rød i hul' };
+  const DEFAULT_RED = 6;
+  const fmt = n => n < 0 ? '−' + Math.abs(n) : String(n);
 
   const STATE_KEY = 'skomar.state.v1';
   const SETTINGS_KEY = 'skomar.settings.v1';
@@ -325,7 +356,7 @@
 
   let game = null;   // aktivt spil
   let undo = [];     // snapshots (JSON) før hver handling
-  let settings = loadJSON(SETTINGS_KEY) || { names:['', ''], target:70, bestOf:1 };
+  let settings = Object.assign({ names:['', ''], target:70, bestOf:1, redPenalty:DEFAULT_RED }, loadJSON(SETTINGS_KEY) || {});
 
   function loadJSON(key){
     try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
@@ -347,6 +378,10 @@
     $('targetCustom').value = preset ? '' : settings.target;
     document.querySelectorAll('[data-bestof]').forEach(b =>
       b.setAttribute('aria-pressed', String(+b.dataset.bestof === settings.bestOf)));
+    const redPreset = [2,4,6].includes(settings.redPenalty);
+    document.querySelectorAll('[data-red]').forEach(b =>
+      b.setAttribute('aria-pressed', String(redPreset && +b.dataset.red === settings.redPenalty)));
+    $('redCustom').value = redPreset ? '' : settings.redPenalty;
   }
 
   $('targetChips').addEventListener('click', e => {
@@ -360,6 +395,17 @@
       document.querySelectorAll('[data-target]').forEach(b => b.setAttribute('aria-pressed', 'false'));
     }
   });
+  $('redChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-red]'); if (!b) return;
+    settings.redPenalty = +b.dataset.red; renderSetup();
+  });
+  $('redCustom').addEventListener('input', e => {
+    const v = Math.abs(parseInt(e.target.value, 10));
+    if (v > 0) {
+      settings.redPenalty = v;
+      document.querySelectorAll('[data-red]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    }
+  });
   $('bestOfChips').addEventListener('click', e => {
     const b = e.target.closest('[data-bestof]'); if (!b) return;
     settings.bestOf = +b.dataset.bestof; renderSetup();
@@ -369,11 +415,13 @@
     const names = [ $('name0').value.trim(), $('name1').value.trim() ];
     settings.names = names;
     if (!(settings.target > 0)) settings.target = 70;
+    if (!(settings.redPenalty > 0)) settings.redPenalty = DEFAULT_RED;
     saveJSON(SETTINGS_KEY, settings);
     game = {
       names: [names[0] || 'Spiller 1', names[1] || 'Spiller 2'],
       target: settings.target,
       bestOf: settings.bestOf,
+      redPenalty: settings.redPenalty,
       setsWon: [0, 0],
       setNo: 1,
       scores: [0, 0],
@@ -392,7 +440,9 @@
 
   /* ---------- Spil ---------- */
   const other = i => 1 - i;
-  const shotTotal = () => game.pending.reduce((s, id) => s + EV[id].pts, 0);
+  const evPts = id => id === 'roed' ? game.redPenalty : EV[id].pts;
+  const shotTotal = () => game.pending.reduce((s, id) => s + evPts(id), 0);
+  const hasRed = () => game.pending.includes('roed');
   const setsToWin = () => Math.ceil(game.bestOf / 2);
 
   function snapshot(){
@@ -404,6 +454,13 @@
     if (game.setOver !== null) return;
     game.pending.push(id);
     buzz(10);
+    persist(); render();
+  }
+  function toggleRed(){
+    if (game.setOver !== null) return;
+    const i = game.pending.indexOf('roed');
+    if (i >= 0) game.pending.splice(i, 1);
+    else { game.pending.push('roed'); buzz([30, 40, 30]); }
     persist(); render();
   }
   function removePending(i){
@@ -418,18 +475,19 @@
     snapshot();
     const shooter = game.turn;
     const to = kind === 'skaeve' ? other(shooter) : shooter;
-    game.scores[to] += pts;
+    game.scores[to] += kind === 'minus' ? -pts : pts;
     game.log.push({ set: game.setNo, shooter, to, pts, kind, events: kind === 'miss' ? [] : game.pending.slice() });
     game.pending = [];
     game.turn = other(shooter);
 
     if (pts > 0) {
       if (kind === 'skaeve') toast(`Skæve! +${pts} til ${game.names[to]}`);
+      else if (kind === 'minus') toast(`Rød i hul! −${pts} til ${game.names[to]}`);
       else toast(`+${pts} til ${game.names[to]}`);
     }
-    buzz(kind === 'skaeve' ? [40, 60, 40] : 25);
+    buzz(kind === 'point' || kind === 'miss' ? 25 : [40, 60, 40]);
 
-    if (game.scores[to] >= game.target) {
+    if (kind !== 'minus' && game.scores[to] >= game.target) {
       game.setsWon[to] += 1;
       game.setOver = to;
       game.matchOver = game.setsWon[to] >= setsToWin();
@@ -468,6 +526,7 @@
       game.pending.pop();
     } else if (undo.length) {
       game = JSON.parse(undo.pop());
+      if (!(game.redPenalty > 0)) game.redPenalty = DEFAULT_RED;
       toast('Fortrudt');
     } else {
       return;
@@ -496,7 +555,7 @@
     $('board').innerHTML = game.names.map((name, i) => {
       const score = game.scores[i];
       const left = Math.max(0, game.target - score);
-      const pct = Math.min(100, score / game.target * 100);
+      const pct = Math.max(0, Math.min(100, score / game.target * 100));
       const dots = game.bestOf > 1
         ? `<span class="sets" aria-label="${game.setsWon[i]} sæt vundet">${
             Array.from({length: setsToWin()}, (_, k) => `<i class="${k < game.setsWon[i] ? 'won' : ''}"></i>`).join('')
@@ -505,7 +564,7 @@
         ${dots}
         <span class="pname">${esc(name)}</span>
         <span class="turn">${i === t && game.setOver === null ? '● Til stød' : ''}</span>
-        <span class="score">${score}</span>
+        <span class="score ${score < 0 ? 'neg' : ''}">${fmt(score)}</span>
         <span class="left">${left > 0 ? `mangler ${left}` : 'i mål!'}</span>
         <span class="bar"><i style="width:${pct}%"></i></span>
       </button>`;
@@ -517,16 +576,26 @@
 
     // Stød
     const total = shotTotal();
+    const red = hasRed();
     $('shotWho').textContent = `Stød: ${game.names[t]}`;
-    $('shotTotal').textContent = total;
+    $('shotTotal').textContent = red ? fmt(-total) : total;
+    $('shotTotal').classList.toggle('neg', red);
     $('picked').innerHTML = game.pending.length
-      ? game.pending.map((id, i) => `<button class="pchip" data-action="unpick" data-i="${i}" aria-label="Fjern ${esc(EV[id].label)}">${esc(EV[id].label)} +${EV[id].pts}</button>`).join('')
+      ? game.pending.map((id, i) => `<button class="pchip" data-action="unpick" data-i="${i}" aria-label="Fjern ${esc(EV[id].label)}">${esc(EV[id].label)} ${id === 'roed' ? '−' : '+'}${evPts(id)}</button>`).join('')
       : '<span class="empty">Tryk på det, der skete i stødet …</span>';
 
-    $('btnGive').innerHTML = total > 0
-      ? `✓ Giv ${total} point<small>til ${esc(game.names[t])}</small>`
-      : `✓ Giv point<small>vælg først hvad der skete</small>`;
-    $('btnGive').disabled = total <= 0;
+    $('btnRed').innerHTML = `<span class="ball" aria-hidden="true"></span><span>Rød i hul<small>minus til ${esc(game.names[t])}</small></span><b>−${game.redPenalty}</b>`;
+    $('btnRed').setAttribute('aria-pressed', String(red));
+
+    const give = $('btnGive');
+    give.classList.toggle('minus', red);
+    give.dataset.action = red ? 'minus' : 'give';
+    give.innerHTML = red
+      ? `− Træk ${total} fra<small>${esc(game.names[t])}</small>`
+      : total > 0
+        ? `✓ Giv ${total} point<small>til ${esc(game.names[t])}</small>`
+        : `✓ Giv point<small>vælg først hvad der skete</small>`;
+    give.disabled = total <= 0;
     $('btnSkaeve').innerHTML = `⚠ Skæve${total > 0 ? ' ' + total : ''}<small>til ${esc(game.names[other(t)])}</small>`;
     $('btnSkaeve').disabled = total <= 0;
     $('btnMiss').disabled = total > 0;
@@ -536,11 +605,12 @@
     const setLog = game.log.filter(e => e.set === game.setNo);
     $('historyTitle').textContent = `Historik · sæt ${game.setNo} (${setLog.length} stød)`;
     $('log').innerHTML = setLog.slice().reverse().map(e => {
-      const sk = e.kind === 'skaeve';
+      const sk = e.kind === 'skaeve', minus = e.kind === 'minus';
       const who = sk
         ? `${esc(game.names[e.shooter])} → skæve til ${esc(game.names[e.to])}`
-        : esc(game.names[e.shooter]);
-      return `<li class="${sk ? 'sk' : ''}"><span>${who}<br><span class="d">${esc(describe(e))}</span></span><span class="p">${e.pts ? '+' + e.pts : '0'}</span></li>`;
+        : minus ? `${esc(game.names[e.shooter])} → minus` : esc(game.names[e.shooter]);
+      const p = !e.pts ? '0' : (minus ? '−' : '+') + e.pts;
+      return `<li class="${sk || minus ? 'sk' : ''}"><span>${who}<br><span class="d">${esc(describe(e))}</span></span><span class="p">${p}</span></li>`;
     }).join('') || '<li><span class="d">Ingen stød endnu</span></li>';
 
     renderWin();
@@ -555,9 +625,9 @@
       $('winTitle').innerHTML = `🏆 ${nm} vinder${game.bestOf > 1 ? ' kampen' : ''}!`;
       $('winScore').textContent = game.bestOf > 1
         ? `${game.setsWon[0]} – ${game.setsWon[1]}`
-        : `${game.scores[0]} – ${game.scores[1]}`;
+        : `${fmt(game.scores[0])} – ${fmt(game.scores[1])}`;
       $('winText').textContent = game.bestOf > 1
-        ? `Sidste sæt: ${game.scores[0]} – ${game.scores[1]}`
+        ? `Sidste sæt: ${fmt(game.scores[0])} – ${fmt(game.scores[1])}`
         : `${game.names[0]} – ${game.names[1]}`;
       $('winButtons').innerHTML = `
         <button class="primary" data-action="rematch">Revanche</button>
@@ -565,7 +635,7 @@
         <button class="ghost" data-action="setupFromWin">Nye spillere / indstillinger</button>`;
     } else {
       $('winTitle').innerHTML = `${nm} vinder sæt ${game.setNo}!`;
-      $('winScore').textContent = `${game.scores[0]} – ${game.scores[1]}`;
+      $('winScore').textContent = `${fmt(game.scores[0])} – ${fmt(game.scores[1])}`;
       $('winText').textContent = `Stilling i sæt: ${game.names[0]} ${game.setsWon[0]} – ${game.setsWon[1]} ${game.names[1]}`;
       $('winButtons').innerHTML = `
         <button class="primary" data-action="nextSet">Næste sæt</button>
@@ -595,6 +665,7 @@
       settings.names = game.names.slice();
       settings.target = game.target;
       settings.bestOf = game.bestOf;
+      settings.redPenalty = game.redPenalty;
     }
     game = null; undo = [];
     persist();
@@ -608,6 +679,8 @@
       case 'ev': addEvent(b.dataset.id); break;
       case 'unpick': removePending(+b.dataset.i); break;
       case 'give': commit('point'); break;
+      case 'minus': commit('minus'); break;
+      case 'red': toggleRed(); break;
       case 'skaeve': commit('skaeve'); break;
       case 'miss': commit('miss'); break;
       case 'undo': doUndo(); break;
@@ -621,7 +694,10 @@
         break;
       case 'confirmNew': $('confirmOverlay').classList.remove('show'); goToSetup(); break;
       case 'cancelNew': $('confirmOverlay').classList.remove('show'); break;
-      case 'rules': $('rulesOverlay').classList.add('show'); break;
+      case 'rules':
+        $('rulesRed').textContent = '−' + (game ? game.redPenalty : settings.redPenalty);
+        $('rulesOverlay').classList.add('show');
+        break;
       case 'closeRules': $('rulesOverlay').classList.remove('show'); break;
     }
   });
@@ -658,6 +734,7 @@
   const saved = loadJSON(STATE_KEY);
   if (saved && saved.game) {
     game = saved.game; undo = Array.isArray(saved.undo) ? saved.undo : [];
+    if (!(game.redPenalty > 0)) game.redPenalty = DEFAULT_RED;
     show('game');
     requestWakeLock();
   } else {
