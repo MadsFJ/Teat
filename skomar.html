@@ -288,6 +288,18 @@
   </div>
 </div>
 
+<!-- Bekræft nyt spil -->
+<div class="overlay" id="confirmOverlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Start forfra?</h2>
+    <p>Det nuværende spil afsluttes, og stillingen slettes.</p>
+    <div class="stack">
+      <button class="primary" data-action="confirmNew">Ja, nyt spil</button>
+      <button class="ghost" data-action="cancelNew">Fortsæt spillet</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -604,15 +616,18 @@
       case 'rematch': rematch(); break;
       case 'setupFromWin': goToSetup(); break;
       case 'new':
-        if (!game.log.length || confirm('Afslut det nuværende spil og start forfra?')) goToSetup();
+        if (!game.log.length) goToSetup();
+        else $('confirmOverlay').classList.add('show');
         break;
+      case 'confirmNew': $('confirmOverlay').classList.remove('show'); goToSetup(); break;
+      case 'cancelNew': $('confirmOverlay').classList.remove('show'); break;
       case 'rules': $('rulesOverlay').classList.add('show'); break;
       case 'closeRules': $('rulesOverlay').classList.remove('show'); break;
     }
   });
-  $('rulesOverlay').addEventListener('click', e => {
+  ['rulesOverlay', 'confirmOverlay'].forEach(id => $(id).addEventListener('click', e => {
     if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
-  });
+  }));
 
   /* ---------- Småting ---------- */
   let toastTimer;
