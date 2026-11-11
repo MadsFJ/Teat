@@ -16,7 +16,7 @@
           "pris": 139
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -36,7 +36,7 @@
           "pris": 189
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -48,7 +48,7 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -60,7 +60,7 @@
           "pris": 176
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": "HTTP 403",
       "metode": "json-ld"
     },
@@ -72,7 +72,7 @@
           "pris": 171.88
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -84,7 +84,7 @@
           "pris": 179
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -100,12 +100,12 @@
           "pris": 176.8
         }
       ],
-      "sidstTjekket": "2026-11-10T21:19:08.012Z",
+      "sidstTjekket": "2026-11-11T12:45:20.715Z",
       "fejl": null,
       "metode": "tekst"
     }
   },
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
-  "opdateret": "2026-11-10T21:19:08.012Z"
+  "opdateret": "2026-11-11T12:45:20.715Z"
 }
