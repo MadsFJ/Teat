@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vejen 6600 i 3D</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.css">
+<style>
+  :root{
+    color-scheme: light;
+    --surface: rgba(255,255,255,.92);
+    --border: #d5deda;
+    --text: #0f1a1a;
+    --text-muted: #546462;
+    --accent: #0b8f7c;
+    --accent-contrast: #ffffff;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html, body{ margin:0; height:100%; font-family:var(--font); color:var(--text); background:#dfe9ee; }
+  #map{ position:absolute; inset:0; }
+
+  .panel{
+    position:absolute; top:12px; left:12px; z-index:2;
+    width:min(280px, calc(100vw - 76px));
+    padding:14px 16px 16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 6px 24px rgba(15,26,26,.14);
+    backdrop-filter:blur(6px);
+  }
+  .eyebrow{ margin:0; font-size:11px; font-weight:600; letter-spacing:.14em; color:var(--accent); }
+  h1{ margin:2px 0 0; font-size:22px; line-height:1.2; }
+  .lede{ margin:6px 0 0; font-size:13px; line-height:1.5; color:var(--text-muted); }
+  .controls{ margin-top:12px; display:grid; gap:10px; }
+  .row{ display:flex; gap:8px; }
+  button{
+    flex:1; appearance:none; cursor:pointer;
+    padding:8px 10px; border-radius:8px;
+    border:1px solid var(--border); background:#fff; color:var(--text);
+    font:600 13px var(--font);
+  }
+  button:hover{ border-color:var(--accent); }
+  button:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"]{ background:var(--accent); border-color:var(--accent); color:var(--accent-contrast); }
+  label{ display:grid; gap:4px; font-size:12px; font-weight:600; color:var(--text-muted); }
+  label span output{ color:var(--text); font-variant-numeric:tabular-nums; }
+  input[type="range"]{ width:100%; accent-color:var(--accent); }
+  .hint{ margin:0; font-size:11px; line-height:1.45; color:var(--text-muted); }
+  .status{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:3;
+    max-width:min(420px, calc(100vw - 32px));
+    padding:12px 16px; border-radius:10px;
+    background:var(--surface); border:1px solid var(--border);
+    font-size:14px; text-align:center;
+  }
+  .status[hidden]{ display:none; }
+  .status.error{ border-color:#ad2c22; color:#ad2c22; }
+  details > summary{ cursor:pointer; list-style:none; }
+  details > summary::-webkit-details-marker{ display:none; }
+  details > summary h1::after{ content:" ▾"; font-size:14px; color:var(--text-muted); }
+  details:not([open]) > summary h1::after{ content:" ▸"; }
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="3D-kort over Vejen"></div>
+
+<details class="panel" open>
+  <summary>
+    <p class="eyebrow">3D-KORT</p>
+    <h1>Vejen 6600</h1>
+  </summary>
+  <p class="lede">Træk for at flytte, rul for at zoome, og højreklik-træk (eller to fingre) for at dreje og vippe.</p>
+  <div class="controls">
+    <div class="row">
+      <button id="orbit" type="button" aria-pressed="false">⟳ Rotér</button>
+      <button id="tilt" type="button" aria-pressed="true">3D</button>
+      <button id="reset" type="button">Nulstil</button>
+    </div>
+    <label>
+      <span>Bygningshøjde: <output id="scaleOut">×1,5</output></span>
+      <input id="scale" type="range" min="1" max="4" step="0.5" value="1.5">
+    </label>
+    <p class="hint">Bygningshøjder kommer fra OpenStreetMap. Hvor højden ikke er registreret, bruges et skøn, så de er ikke præcise mål.</p>
+  </div>
+</details>
+
+<div id="status" class="status" role="status">Henter kortet …</div>
+
+<script type="module">
+const statusEl = document.getElementById('status');
+function showError(msg){
+  statusEl.textContent = msg;
+  statusEl.classList.add('error');
+  statusEl.hidden = false;
+}
+
+let maplibregl;
+try {
+  maplibregl = await import('https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs');
+} catch (err) {
+  showError('Kunne ikke hente kortbiblioteket (MapLibre). Tjek internetforbindelsen, og prøv igen.');
+  throw err;
+}
+
+// Vejen bymidte (ca.) og startkamera.
+const HOME = { center: [9.1340, 55.4775], zoom: 15.4, pitch: 60, bearing: -20 };
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://tiles.openfreemap.org/styles/liberty',
+  ...HOME,
+  minZoom: 9,
+  maxPitch: 80,
+  hash: true,
+  canvasContextAttributes: { antialias: true },
+});
+
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+
+// På smalle skærme starter panelet sammenfoldet, så det ikke dækker kortet.
+if (matchMedia('(max-width: 600px)').matches) document.querySelector('.panel').open = false;
+
+const scaleInput = document.getElementById('scale');
+const scaleOut = document.getElementById('scaleOut');
+const orbitBtn = document.getElementById('orbit');
+const tiltBtn = document.getElementById('tilt');
+
+function applyBuildingScale(){
+  const k = Number(scaleInput.value);
+  scaleOut.textContent = '×' + String(k).replace('.', ',');
+  if (!map.getLayer('building-3d')) return;
+  map.setPaintProperty('building-3d', 'fill-extrusion-height', ['*', ['coalesce', ['get', 'render_height'], 5], k]);
+  map.setPaintProperty('building-3d', 'fill-extrusion-base', ['*', ['coalesce', ['get', 'render_min_height'], 0], k]);
+}
+
+map.on('load', () => {
+  statusEl.hidden = true;
+
+  // Himmel og dis mod horisonten, så det skrå kig ikke ender i en hård kant.
+  map.setSky({
+    'sky-color': '#8ec5ee',
+    'horizon-color': '#e8f1f5',
+    'fog-color': '#e8f1f5',
+    'sky-horizon-blend': 0.6,
+    'horizon-fog-blend': 0.6,
+    'fog-ground-blend': 0.4,
+  });
+  map.setLight({ anchor: 'map', position: [1.5, 210, 35], intensity: 0.45 });
+
+  if (map.getLayer('building-3d')) {
+    // Vis 3D-bygninger lidt tidligere og farv dem efter højde.
+    map.setLayerZoomRange('building-3d', 13, 24);
+    if (map.getLayer('building')) map.setLayerZoomRange('building', 12, 13);
+    map.setPaintProperty('building-3d', 'fill-extrusion-color', [
+      'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 5],
+      0, '#efe7dc',
+      8, '#e3cdb4',
+      15, '#d3a583',
+      30, '#b97a5e',
+    ]);
+    map.setPaintProperty('building-3d', 'fill-extrusion-opacity', 0.92);
+    applyBuildingScale();
+  }
+});
+
+map.on('error', (e) => {
+  // Enkelte fliser kan fejle uden at kortet er ubrugeligt; vis kun fejl hvis intet er indlæst.
+  if (!map.loaded() && !statusEl.classList.contains('error')) {
+    showError('Kortdata kunne ikke hentes fra OpenFreeMap. Prøv at genindlæse siden.');
+  }
+  console.warn(e.error || e);
+});
+
+scaleInput.addEventListener('input', applyBuildingScale);
+
+// --- Rotation rundt om kortets centrum ---
+let orbiting = false;
+let lastT = 0;
+function orbitFrame(t){
+  if (!orbiting) return;
+  const dt = lastT ? Math.min(t - lastT, 100) : 0;
+  lastT = t;
+  map.setBearing(map.getBearing() + dt * 0.006); // ca. 6° pr. sekund
+  requestAnimationFrame(orbitFrame);
+}
+function setOrbit(on){
+  orbiting = on;
+  orbitBtn.setAttribute('aria-pressed', String(on));
+  if (on) { lastT = 0; requestAnimationFrame(orbitFrame); }
+}
+orbitBtn.addEventListener('click', () => setOrbit(!orbiting));
+// Stop rotationen, så snart brugeren selv tager fat i kortet.
+for (const ev of ['mousedown', 'touchstart', 'wheel']) {
+  map.getCanvasContainer().addEventListener(ev, () => setOrbit(false), { passive: true });
+}
+
+// --- 3D / ovenfra ---
+tiltBtn.addEventListener('click', () => {
+  setOrbit(false); // rotationen ville ellers afbryde vippe-animationen
+  const to3d = map.getPitch() < 20;
+  map.easeTo({ pitch: to3d ? 60 : 0, duration: reduceMotion ? 0 : 800 });
+});
+map.on('pitchend', () => tiltBtn.setAttribute('aria-pressed', String(map.getPitch() >= 20)));
+
+document.getElementById('reset').addEventListener('click', () => {
+  setOrbit(false);
+  map.flyTo({ ...HOME, duration: reduceMotion ? 0 : 1500 });
+});
+
+window.vejenMap = map; // til fejlsøgning i konsollen
+</script>
+</body>
+</html>

@@ -150,3 +150,26 @@ Browserbaseret lyd-/musikgenkendelse (uafhængig af Pladelog).
 Guide til at bygge en Apple Genvej, der får den rigtige LED-blitz på
 iPhone til at blinke i diskotek-mønstre. Ikke en webapp — iOS tillader
 ikke browsere at styre lommelygten, så løsningen er en Genvej i stedet.
+
+## `vejen-3d.html` — Vejen 6600 i 3D
+
+Interaktivt 3D-kort over Vejen by: bygninger rejst i højden, skråt
+kameraperspektiv, himmel og dis mod horisonten.
+
+- træk for at flytte, rul for at zoome, højreklik-træk (eller to fingre)
+  for at dreje og vippe,
+- knapper til automatisk rotation, skift mellem 3D og ovenfra samt
+  nulstilling af kameraet,
+- skyder til at overdrive bygningshøjden, så den lave bebyggelse træder
+  tydeligere frem,
+- kameraets position gemmes i adressen (`#zoom/bredde/længde/…`), så et
+  bestemt udsnit kan deles som link.
+
+Kortet tegnes med [MapLibre GL JS](https://maplibre.org/) og gratis
+vektorfliser fra [OpenFreeMap](https://openfreemap.org/) (data fra
+OpenStreetMap) — ingen API-nøgle og intet build-trin, men siden kræver
+internetforbindelse.
+
+**Kendte begrænsninger:** bygningshøjderne kommer fra OpenStreetMap og
+er et skøn, hvor højden ikke er registreret. Terrænet er fladt (ingen
+højdemodel), og postnummergrænsen for 6600 er ikke tegnet ind.
