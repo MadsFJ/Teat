@@ -162,6 +162,9 @@ kameraperspektiv, himmel og dis mod horisonten.
   nulstilling af kameraet,
 - skyder til at overdrive bygningshøjden, så den lave bebyggelse træder
   tydeligere frem,
+- klik på et hus for at se adressen (slået op hos Nominatim /
+  OpenStreetMap) med link til Google Street View og til Kraks søgning
+  på adressen. Beboeroplysninger kopieres bevidst ikke ind på siden,
 - kameraets position gemmes i adressen (`#zoom/bredde/længde/…`), så et
   bestemt udsnit kan deles som link.
 

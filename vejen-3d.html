@@ -57,6 +57,16 @@
   }
   .status[hidden]{ display:none; }
   .status.error{ border-color:#ad2c22; color:#ad2c22; }
+  .maplibregl-popup-content{ padding:12px 14px; border-radius:10px; font:13px/1.45 var(--font); color:var(--text); min-width:190px; }
+  .pop-addr{ margin:0 22px 2px 0; font-size:15px; font-weight:700; }
+  .pop-sub{ margin:0; color:var(--text-muted); }
+  .pop-links{ margin-top:10px; display:grid; gap:6px; }
+  .pop-links a{
+    display:block; padding:7px 10px; border-radius:8px; text-decoration:none; font-weight:600;
+    border:1px solid var(--border); color:var(--text); background:#fff;
+  }
+  .pop-links a:hover{ border-color:var(--accent); color:var(--accent); }
+  .pop-links a:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   details > summary{ cursor:pointer; list-style:none; }
   details > summary::-webkit-details-marker{ display:none; }
   details > summary h1::after{ content:" ▾"; font-size:14px; color:var(--text-muted); }
@@ -71,7 +81,7 @@
     <p class="eyebrow">3D-KORT</p>
     <h1>Vejen 6600</h1>
   </summary>
-  <p class="lede">Træk for at flytte, rul for at zoome, og højreklik-træk (eller to fingre) for at dreje og vippe.</p>
+  <p class="lede">Træk for at flytte, rul for at zoome, og højreklik-træk (eller to fingre) for at dreje og vippe. Klik på et hus for adresse, Street View og opslag på Krak.</p>
   <div class="controls">
     <div class="row">
       <button id="orbit" type="button" aria-pressed="false">⟳ Rotér</button>
@@ -210,6 +220,71 @@ map.on('pitchend', () => tiltBtn.setAttribute('aria-pressed', String(map.getPitc
 document.getElementById('reset').addEventListener('click', () => {
   setOrbit(false);
   map.flyTo({ ...HOME, duration: reduceMotion ? 0 : 1500 });
+});
+
+// --- Klik på kortet: adresse, Street View og opslag på Krak ---
+// Adressen slås op hos Nominatim (OpenStreetMap). Beboeroplysninger hentes ikke
+// ind på siden; der linkes i stedet til Kraks egen søgning på adressen.
+let popup = null;
+let lookup = null;
+function link(href, text){
+  const a = document.createElement('a');
+  a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = text + ' ↗';
+  return a;
+}
+function popupContent(lngLat, addr, note){
+  const box = document.createElement('div');
+  const title = document.createElement('p');
+  title.className = 'pop-addr';
+  title.textContent = addr ? addr.line1 : 'Valgt punkt';
+  const sub = document.createElement('p');
+  sub.className = 'pop-sub';
+  sub.textContent = addr ? addr.line2 : note;
+  const links = document.createElement('div');
+  links.className = 'pop-links';
+  const { lng, lat } = lngLat;
+  links.append(link(
+    `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat.toFixed(6)},${lng.toFixed(6)}`,
+    'Åbn Street View'));
+  if (addr && addr.query) {
+    links.append(link(`https://www.krak.dk/${encodeURIComponent(addr.query)}/personer`, 'Hvem bor her? (Krak)'));
+  }
+  box.append(title, sub, links);
+  return box;
+}
+map.on('click', async (e) => {
+  if (lookup) lookup.abort();
+  lookup = new AbortController();
+  const { signal } = lookup;
+  if (popup) popup.remove();
+  popup = new maplibregl.Popup({ maxWidth: '280px', offset: 6 })
+    .setLngLat(e.lngLat)
+    .setDOMContent(popupContent(e.lngLat, null, 'Henter adresse …'))
+    .addTo(map);
+  const current = popup;
+  try {
+    const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&accept-language=da'
+      + `&lat=${e.lngLat.lat.toFixed(6)}&lon=${e.lngLat.lng.toFixed(6)}`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const a = (await res.json()).address || {};
+    const city = a.city || a.town || a.village || a.hamlet || a.municipality || '';
+    const line2 = [a.postcode, city].filter(Boolean).join(' ');
+    let addr = null;
+    if (a.road) {
+      const line1 = [a.road, a.house_number].filter(Boolean).join(' ');
+      addr = { line1, line2: a.house_number ? line2 : line2 + ' · nærmeste vej, intet husnummer fundet',
+               query: a.house_number ? [line1, line2].filter(Boolean).join(' ') : '' };
+    }
+    current.setDOMContent(popupContent(e.lngLat, addr, 'Ingen adresse fundet her.'));
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    current.setDOMContent(popupContent(e.lngLat, null, 'Adressen kunne ikke slås op lige nu.'));
+  }
+});
+map.on('mousemove', (e) => {
+  const overBuilding = map.getLayer('building-3d') && map.queryRenderedFeatures(e.point, { layers: ['building-3d'] }).length > 0;
+  map.getCanvas().style.cursor = overBuilding ? 'pointer' : '';
 });
 
 window.vejenMap = map; // til fejlsøgning i konsollen
