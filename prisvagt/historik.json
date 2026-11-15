@@ -14,9 +14,13 @@
         {
           "tid": "2026-10-30T11:25:25.083Z",
           "pris": 139
+        },
+        {
+          "tid": "2026-11-15T12:46:14.379Z",
+          "pris": 189
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -34,9 +38,13 @@
         {
           "tid": "2026-10-30T11:25:25.083Z",
           "pris": 189
+        },
+        {
+          "tid": "2026-11-15T12:46:14.379Z",
+          "pris": 139
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -48,7 +56,7 @@
           "pris": 239
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -60,7 +68,7 @@
           "pris": 176
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
       "fejl": "HTTP 403",
       "metode": "json-ld"
     },
@@ -72,7 +80,7 @@
           "pris": 171.88
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -84,7 +92,7 @@
           "pris": 179
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
       "fejl": null,
       "metode": "json-ld"
     },
@@ -100,12 +108,12 @@
           "pris": 176.8
         }
       ],
-      "sidstTjekket": "2026-11-14T19:56:54.289Z",
-      "fejl": "Kunne ikke finde en pris på siden",
+      "sidstTjekket": "2026-11-15T12:46:14.379Z",
+      "fejl": null,
       "metode": "tekst"
     }
   },
   "produkt": "Linie Akvavit 70 cl",
   "maalpris": 120,
-  "opdateret": "2026-11-14T19:56:54.289Z"
+  "opdateret": "2026-11-15T12:46:14.379Z"
 }
